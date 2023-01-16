@@ -13,12 +13,16 @@ T_amb = 309; % Ambient temp Kelvin
 T_K2C = 273;
 
 %% Exercise 5
-tend = 50;
-time = 0:0.1:tend;
-x_step = 0.01;
-y_step = 0.01;
+Nx = 30; % Number of samples x,y,t
+Ny = 30;
+Nt = 100;
+t_end = 50;
+t_step = t_end/(Nt-1);
+x_step = Lx/(Nx-1);
+y_step = Ly/(Ny-1);
 X = 0:x_step:Lx;
 Y = 0:y_step:Ly;
+time = 0:t_step:tend;
 K = 10; 
 L = 10;
 T = zeros(length(X),length(Y),length(time));
@@ -26,12 +30,13 @@ T = zeros(length(X),length(Y),length(time));
 aSol = zeros(K+1,L+1,length(time));
 T0 = ones(length(X),length(Y));
 
+% Initial conditions
 a_kl = zeros(L+1,K+1);
 for x = 1:length(X)
     for y = 1:length(Y)
         for k = 0:K
             for l = 0:L
-             a_kl(k+1,l+1) = a_kl(k+1,l+1) + basisx(X(x),k,Lx)*basisy(Y(y),l,Ly)*T0(x,y);
+             a_kl(k+1,l+1) = a_kl(k+1,l+1) + T0(x,y)*basisx(X(x),k,Lx)*basisy(Y(y),l,Ly);
             end
         end
     end
@@ -82,6 +87,8 @@ for k = 0:K
     end
 end
 
+%% Plot initial conditions a_kl
+surf(a_kl)
 %% Plot basis 1D
 
 for x = 1:length(X)
