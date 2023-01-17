@@ -147,19 +147,19 @@ for k = 0:2
     end
 end
 
-%% Show intital temperature of the plate
+% Show intital temperature of the plate
 figure()
 subplot(1,3,1)
 surf(X,Y,T0)
 xlabel('x')
 ylabel('y')
 title('Intial temperature')
-subplot(1,3,2)
+subplot(312)
 surf(X,Y,T0dx)
 xlabel('x')
 ylabel('y')
 title('dT0/dx')
-subplot(1,3,3)
+subplot(313)
 surf(X,Y,T0dy)
 xlabel('x')
 ylabel('y')
