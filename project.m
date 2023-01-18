@@ -2,8 +2,8 @@
 clear all; close all; clc
 
 % Properties
-Lx  = 0.2;
-Ly  = 0.3;
+Lx  = 0.2; % Length of plate in x direction
+Ly  = 0.3; % Length of plate in y direction
 rho = [2328 2300]; % Material densities (yellow,blue respectively)
 c   = [700 680]; % Heat capacities
 kappa = [148 148]; % Thermal conductivities
@@ -11,7 +11,7 @@ X1 = Lx/4 ; Y1 = Ly/2; % Heat source 1 location
 X2 = (3*Lx)/4; Y2 = Ly/2; % Heat source 2 location
 W = 0.05; % Actuator width [m]
 Tamb = 309; % Ambient temp Kelvin
-TK2C = 273;
+TK2C = 273; % Kelvin to Celcius offset
 
 % Simulation parameters
 tend = 600; % 10 minutes
@@ -24,9 +24,8 @@ Ny = Ly/(ystep+1);
 time = 0:tstep:tend;
 X = 0:xstep:Lx;
 Y = 0:ystep:Ly;
-
-K = 2; 
-L = 2;
+K = 20; 
+L = 20;
 
 % Preallocation
 T = zeros(length(X),length(Y),length(time));
@@ -36,7 +35,7 @@ a = zeros(K+1,L+1,length(time));
 
 % User parameters
 show_visuals = false; % Will show all the visualization plots subsequently
-input.switch = false; % Turn the input source on or off
+input.switch = true; % Turn the input source on or off
 input.par.type = 'sinusoid'; % {const,sinusoid} What type of input
 input.par.freq = 0.1; % [Hz]
 input.par.tstart = 5; % [s]
@@ -69,6 +68,7 @@ for k = 0:K
 end
 
 %% Make phi_kl 4D matrix
+phi_kl = zeros(length(X),length(Y),K+1,L+1);
 for x = 1:length(X)
     for y = 1:length(Y)
         for k = 0:K
@@ -80,30 +80,16 @@ for x = 1:length(X)
 end
 
 %% Initial conditions and ODE solver for a
-% tic
-% for k = 0:K 
-%     for l = 0:L
-%         a0(k+1,l+1) = sum(T0.*phi_kl(:,:,k+1,l+1),'all')*xstep*ystep;
-%         a(k+1,l+1,:) = aODE(time,a0(k+1,l+1),kappa(1),rho(1),c(1),Lx,Ly,k,l,phi_u1,phi_u2,input);
-%     end
-% end
-% toc
 
-%% Initial conditions and ODE solver for a backup
 for k = 0:K 
     for l = 0:L
-        for x = 1:length(X)
-            for y = 1:length(Y)
-             a0(k+1,l+1) = a0(k+1,l+1) + T0(x,y)*basisx(X(x),k,Lx)*basisy(Y(y),l,Ly);
-            end
-        end
-        a0(k+1,l+1) = a0(k+1,l+1)*xstep*ystep;
+        a0(k+1,l+1) = sum(T0.*phi_kl(:,:,k+1,l+1),'all')*xstep*ystep;
         a(k+1,l+1,:) = aODE(time,a0(k+1,l+1),kappa(1),rho(1),c(1),Lx,Ly,k,l,phi_u1,phi_u2,input);
     end
 end
 
-%% Temperature over time
-tic
+% Temperature over time
+
 for t = 1:length(time)
     sumT = 0;
     for k = 0:K
@@ -113,7 +99,7 @@ for t = 1:length(time)
     end
     T(:,:,t) = sumT;
 end
-toc
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Visualizations %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if show_visuals
@@ -145,7 +131,7 @@ end
 time_redux = 0.1; % percentage of shown time instances
 TaxisMin = min(min(T0))-0.2;
 TaxisMax = max(max(T0))+0.2;
-TaxisMax_switch = max(max(T(:,:,Nt*time_redux)))
+TaxisMax_switch = max(max(T(:,:,round(Nt*time_redux)+1)))
 font = 15;
 figure()
 for t = 1:round((Nt*time_redux))
