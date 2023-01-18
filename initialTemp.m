@@ -21,7 +21,7 @@ T0x = 1/(stdx*sqrt(2*pi))*(exp((-(X-X(meanx)).^2)/(2*stdx^2)));
 T0x = T0x/max(T0x);
 T0y = 1/(stdy*sqrt(2*pi))*(exp((-(Y-Y(meany)).^2)/(2*stdy^2)));
 T0y = T0y/max(T0y);
-T0 = T0y'*T0x;
+T0 = T0x'*T0y;
 elseif strcmp(selector, 'fourier')
     if((k == 0)&&(l == 0))
         T0  = 1/sqrt(X(end)*Y(end))*X'*Y;
