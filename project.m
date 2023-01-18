@@ -1,10 +1,6 @@
 %% Project model reduction
 clear all; close all; clc
-
-% User parameters
-show_visuals = false; % Will show all the visualization plots subsequently
-source = false; % Turn the input source on or off
-
+tic
 % Properties
 Lx  = 0.2;
 Ly  = 0.3;
@@ -18,9 +14,8 @@ Tamb = 309; % Ambient temp Kelvin
 TK2C = 273;
 
 % Simulation parameters
-
-Nt = 400;
 tend = 600; % 10 minutes
+Nt = tend*2;
 tstep = tend/(Nt-1);
 xstep = W/10;
 ystep = W/10;
@@ -30,19 +25,30 @@ time = 0:tstep:tend;
 X = 0:xstep:Lx;
 Y = 0:ystep:Ly;
 
-K = 2; 
-L = 2;
+K = 7; 
+L = 7;
 
 % Preallocation
 T = zeros(length(X),length(Y),length(time));
 a0 = zeros(K+1,L+1);
 a = zeros(K+1,L+1,length(time));
 
+
+% User parameters
+show_visuals = false; % Will show all the visualization plots subsequently
+input.switch = true; % Turn the input source on or off
+input.par.type = 'sinusoid'; % {const,sinusoid} What type of input
+input.par.freq = 0.1; % [Hz]
+input.par.tstart = 5; % [s]
+input.par.tend = tend; % [s]
+input.par.amp1 = 0.1; % [-]
+input.par.amp2 = 0.1;
+
+
 % Initial temperature
 kinit=2; % Frequency of basis in x
 linit=2; % Frequency of basis in y
-
-[T0,T0dx,T0dy] = initialTemp(X,Y,kinit,linit,'fourier',true);
+[T0,T0dx,T0dy] = initialTemp(X,Y,kinit,linit,'gauss',true);
 
 %% Calculate phi_kl for x,y positions overlapping with u
 phi_u1 = zeros(K+1,L+1);
@@ -53,15 +59,14 @@ for k = 0:K
             for xShort = (Lx/4-W/2):xstep:(Lx/4+W/2)
                 phi_u1(k+1,l+1) = phi_u1(k+1,l+1) + basisxy(xShort,yShort,k,l,Lx,Ly);
             end
-            for xShort = (3*Lx/4-W/2):xstep:(3*Lx/4+W/2)
+            for xShort = ((3*Lx/4)-W/2):xstep:((3*Lx/4)+W/2)
                 phi_u2(k+1,l+1) = phi_u2(k+1,l+1) + basisxy(xShort,yShort,k,l,Lx,Ly);
             end
         end
-        phi_u1(k+1,l+1) = xstep*ystep*phi_u1(k+1,l+1);
-        phi_u2(k+1,l+1) = xstep*ystep*phi_u2(k+1,l+1);
+        phi_u1(k+1,l+1) = phi_u1(k+1,l+1)*xstep*ystep;
+        phi_u2(k+1,l+1) = phi_u2(k+1,l+1)*xstep*ystep;
     end
 end
-
 
 %% Initial conditions and ODE solver for a
 for k = 0:K 
@@ -72,7 +77,7 @@ for k = 0:K
             end
         end
         a0(k+1,l+1) = a0(k+1,l+1)*xstep*ystep;
-        a(k+1,l+1,:) = aODE(time,a0(k+1,l+1),kappa(1),rho(1),c(1),Lx,Ly,k,l,phi_u1,phi_u2,source);
+        a(k+1,l+1,:) = aODE(time,a0(k+1,l+1),kappa(1),rho(1),c(1),Lx,Ly,k,l,phi_u1,phi_u2,input);
     end
 end
 
@@ -91,7 +96,7 @@ for t = 1:length(time)
     end
 end
 
-
+toc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Visualizations %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if show_visuals
 %% full simulation
@@ -102,14 +107,15 @@ font = 15;
 figure()
 for t = 1:length(time)
     mesh(X_mesh,Y_mesh,T(:,:,t)');  
-    if ~source
+    if ~input.switch
         axis([0 Lx 0 Ly TaxisMin TaxisMax]);
     end
+    axis([0 Lx 0 Ly 0 2]);
     title(sprintf('Plate temperature for time = %g [s]', round(time(t))),Interpreter='latex',FontSize=font);
     xlabel('x [m]',Interpreter='latex',FontSize=font); 
     ylabel('y [m]',Interpreter='latex',FontSize=font); 
     zlabel('T(x,y,t) [$^\circ \mathrm{C}]$',Interpreter='latex',FontSize=font);
-    pause(0.001)
+    pause(0.05)
 end
 
 %% Initial behaviour
@@ -121,7 +127,7 @@ font = 15;
 figure()
 for t = 1:round((Nt*time_redux))
     mesh(X_mesh,Y_mesh,T(:,:,t));
-    if ~source
+    if ~input.switch
         axis([0 Lx 0 Ly TaxisMin TaxisMax]);
     end
     title(sprintf('Plate temperature for time = %g [s]', round(time(t))),Interpreter='latex',FontSize=font);
@@ -141,7 +147,7 @@ font = 15;
 figure()
 for t = Nt-round((Nt*time_redux)):Nt
     mesh(X_mesh,Y_mesh,T(:,:,t));
-    if ~source
+    if ~input.switch
         axis([0 Lx 0 Ly TaxisMin TaxisMax]);
     end
     title(sprintf('Plate temperature for time = %g [s]', round(time(t))),Interpreter='latex',FontSize=font);
@@ -160,7 +166,7 @@ figure()
 
 for t = 1:Nt
     mesh(X_mesh,Y_mesh,T(:,:,t));  
-    if ~source
+    if ~input.switch
         axis([0 Lx 0 Ly TaxisMin TaxisMax]);
     end
     title(sprintf('Plate temperature for time = %g [s]', round(time(t))),Interpreter='latex',FontSize=font);
@@ -268,4 +274,16 @@ xlabel('x')
 ylabel('y')
 title('dT0/dy')
 
+%% Running time simulation visual
+psi = [1,2,5,7,10,20]; % Increasing order of K and L
+t = [1,2.11,9.98,18.35,34.6,142]; % Increasing runtime
+p = polyfit(psi,t,5)
+figure()
+plot(psi,t)
+psi_des = 1:100;
+f = polyval(p,psi_des);
+figure()
+plot(psi_des,f./(3600))
+xlabel('order (K and L)')
+ylabel('time [h]')
 end
