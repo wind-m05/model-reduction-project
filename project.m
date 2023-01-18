@@ -80,7 +80,6 @@ for x = 1:length(X)
 end
 
 %% Initial conditions and ODE solver for a
-
 for k = 0:K 
     for l = 0:L
         a0(k+1,l+1) = sum(T0.*phi_kl(:,:,k+1,l+1),'all')*xstep*ystep;
@@ -89,7 +88,6 @@ for k = 0:K
 end
 
 % Temperature over time
-
 for t = 1:length(time)
     sumT = 0;
     for k = 0:K
@@ -101,6 +99,12 @@ for t = 1:length(time)
 end
 
 
+
+%% POD basis simulation
+[U,S,V] = svd(T(:,1,:),'econ');
+figure()
+plot(diag(S)/sum(diag(S)),'ko','Linewidth',2)
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Visualizations %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if show_visuals
 %% full simulation
@@ -110,6 +114,7 @@ TaxisMax = max(max(T0));
 TaxisMin_switch = min(min(T0));
 TaxisMax_switch = max(max(T(:,:,end)));
 font = 15;
+fps = 60;
 figure()
 for t = 1:length(time)
     mesh(X_mesh,Y_mesh,T(:,:,t));  
@@ -123,7 +128,7 @@ for t = 1:length(time)
     xlabel('x [m]',Interpreter='latex',FontSize=font); 
     ylabel('y [m]',Interpreter='latex',FontSize=font); 
     zlabel('T(x,y,t) [$^\circ \mathrm{C}]$',Interpreter='latex',FontSize=font);
-    pause(0.005)
+    pause(1/fps)
 end
 
 %% Initial behaviour
@@ -133,6 +138,7 @@ TaxisMin = min(min(T0))-0.2;
 TaxisMax = max(max(T0))+0.2;
 TaxisMax_switch = max(max(T(:,:,round(Nt*time_redux)+1)))
 font = 15;
+fps = 60;
 figure()
 for t = 1:round((Nt*time_redux))
     mesh(X_mesh,Y_mesh,T(:,:,t));
@@ -146,7 +152,7 @@ for t = 1:round((Nt*time_redux))
     ylabel('y [m]',Interpreter='latex',FontSize=font); 
     zlabel('T(x,y,t) [$^\circ \mathrm{C}]$',Interpreter='latex',FontSize=font);
     colorbar
-    pause(0.05)
+    pause(1/fps)
 end
 
 %% End behaviour
@@ -155,6 +161,7 @@ time_redux = 0.5; % percentage of shown time instances
 TaxisMin = min(min(T(:,:,end)))-min(min(T(:,:,end)))*0.025;
 TaxisMax = max(max(T(:,:,end)))+max(max(T(:,:,end)))*0.025;
 font = 15;
+fps = 60;
 figure()
 for t = Nt-round((Nt*time_redux)):Nt
     mesh(X_mesh,Y_mesh,T(:,:,t));
@@ -167,7 +174,7 @@ for t = Nt-round((Nt*time_redux)):Nt
     xlabel('x [m]',Interpreter='latex',FontSize=font); 
     ylabel('y [m]',Interpreter='latex',FontSize=font); 
     zlabel('T(x,y,t) [$^\circ \mathrm{C}]$',Interpreter='latex',FontSize=font);
-    pause(0.01)
+    pause(1/fps)
 end
 
 %% Sample code for fixed colorbar
@@ -175,8 +182,8 @@ end
 TaxisMin = min(min(T0));
 TaxisMax = max(max(T0));
 font = 15;
+fps = 60;
 figure()
-
 for t = 1:Nt
     mesh(X_mesh,Y_mesh,T(:,:,t));  
     if input.switch
@@ -191,7 +198,7 @@ for t = 1:Nt
     caxis manual;          % allow subsequent plots to use the same color limits
     caxis([TaxisMin TaxisMax]); 
     colorbar;
-    pause(0.001)
+    pause(1/fps)
 end
 caxis auto; 
 %% Solutions of ODE solver for a_k,l over time
@@ -244,16 +251,6 @@ legend show
 % Ytest = -0.3:0.01:0.3;
 % X = Xtest;
 % Y = Ytest;
-
-for x = 1:length(X)
-    for y = 1:length(Y)
-        for k = 0:2
-            for l = 0:2
-                phi_kl(x,y,k+1,l+1) = basisxy(X(x),Y(y),k,l,Lx,Ly);
-            end
-        end
-    end
-end
 
 figure()
 [X_mesh,Y_mesh] = ndgrid(X,Y);
