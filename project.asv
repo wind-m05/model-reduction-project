@@ -14,8 +14,8 @@ Tamb = 309; % Ambient temp Kelvin
 TK2C = 273;
 
 % Simulation parameters
-Nt = 100;
 tend = 600; % 10 minutes
+Nt = tend*2;
 tstep = tend/(Nt-1);
 xstep = W/10;
 ystep = W/10;
@@ -25,8 +25,8 @@ time = 0:tstep:tend;
 X = 0:xstep:Lx;
 Y = 0:ystep:Ly;
 
-K = 40; 
-L = 40;
+K = 5; 
+L = 5;
 
 % Preallocation
 T = zeros(length(X),length(Y),length(time));
@@ -68,7 +68,27 @@ for k = 0:K
     end
 end
 
+%% Make phi_kl 4D matrix
+for x = 1:length(X)
+    for y = 1:length(Y)
+        for k = 0:K
+            for l = 0:L
+                phi_kl(x,y,k+1,l+1) = basisxy(X(x),Y(y),k,l,Lx,Ly);
+            end
+        end
+    end
+end
+
 %% Initial conditions and ODE solver for a
+for k = 0:K 
+    for l = 0:L
+        a0(k+1,l+1) = a0(k+1,l+1) + T0(x,y).*phi_kl(:,:,k+1,l+1);
+        a0(k+1,l+1) = 
+        a(k+1,l+1,:) = aODE(time,a0(k+1,l+1),kappa(1),rho(1),c(1),Lx,Ly,k,l,phi_u1,phi_u2,input);
+    end
+end
+
+%% Initial conditions and ODE solver for a backup
 for k = 0:K 
     for l = 0:L
         for x = 1:length(X)
@@ -81,34 +101,34 @@ for k = 0:K
     end
 end
 
-%% Simulation 
+
+%% Temperature over time
 for t = 1:length(time)
-    for x = 1:length(X)
-        for y = 1:length(Y)
-            sumT = 0;
-            for k = 0:K
-                for l = 0:L 
-                sumT = sumT + (a(k+1,l+1,t)*basisxy(X(x),Y(y),k,l,Lx,Ly));
-                end
-            end
-            T(x,y,t) = sumT;
+    sumT = 0;
+    for k = 0:K
+        for l = 0:L 
+        sumT = sumT + a(k+1,l+1,t)*phi_kl(:,:,k+1,l+1);
         end
     end
+    T(:,:,t) = sumT;
 end
+
+
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Visualizations %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if show_visuals
 %% full simulation
-[X_mesh,Y_mesh] = meshgrid(X,Y);
+[X_mesh,Y_mesh] = ndgrid(X,Y);
 TaxisMin = min(min(T0))-1;
 TaxisMax = max(max(T0))+1;
 font = 15;
 figure()
 for t = 1:length(time)
-    mesh(X_mesh,Y_mesh,T(:,:,t)');  
+    mesh(X_mesh,Y_mesh,T(:,:,t));  
     if ~input.switch
-        axis([0 Lx 0 Ly TaxisMin TaxisMax]);
+        axis([0 Lx 0 Ly TaxisMin-0.2 TaxisMax]);
     end
     axis([0 Lx 0 Ly 0 2]);
     title(sprintf('Plate temperature for time = %g [s]', round(time(t))),Interpreter='latex',FontSize=font);
@@ -130,12 +150,13 @@ for t = 1:round((Nt*time_redux))
     if ~input.switch
         axis([0 Lx 0 Ly TaxisMin TaxisMax]);
     end
+    axis([0 Lx 0 Ly -.3 1]);
     title(sprintf('Plate temperature for time = %g [s]', round(time(t))),Interpreter='latex',FontSize=font);
     xlabel('x [m]',Interpreter='latex',FontSize=font); 
     ylabel('y [m]',Interpreter='latex',FontSize=font); 
     zlabel('T(x,y,t) [$^\circ \mathrm{C}]$',Interpreter='latex',FontSize=font);
     colorbar
-    pause(0.01)
+    pause(0.05)
 end
 
 %% End behaviour
@@ -234,14 +255,14 @@ for x = 1:length(X)
     for y = 1:length(Y)
         for k = 0:2
             for l = 0:2
-                phi_kl(y,x,k+1,l+1) = basisxy(X(x),Y(y),k,l,Lx,Ly);
+                phi_kl(x,y,k+1,l+1) = basisxy(X(x),Y(y),k,l,Lx,Ly);
             end
         end
     end
 end
 
 figure()
-[X_mesh,Y_mesh] = meshgrid(X,Y);
+[X_mesh,Y_mesh] = ndgrid(X,Y);
 for k = 0:2
     for l = 0:2
         mesh(X_mesh,Y_mesh,phi_kl(:,:,k+1,l+1))
@@ -274,4 +295,16 @@ xlabel('x')
 ylabel('y')
 title('dT0/dy')
 
+%% Running time simulation visual
+psi = [1,2,5,7,10,20]; % Increasing order of K and L
+t = [1,2.11,9.98,18.35,34.6,142]; % Increasing runtime
+p = polyfit(psi,t,5)
+figure()
+plot(psi,t)
+psi_des = 1:100;
+f = polyval(p,psi_des);
+figure()
+plot(psi_des,f./(3600))
+xlabel('order (K and L)')
+ylabel('time [h]')
 end

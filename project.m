@@ -1,6 +1,6 @@
 %% Project model reduction
 clear all; close all; clc
-tic
+
 % Properties
 Lx  = 0.2;
 Ly  = 0.3;
@@ -25,8 +25,8 @@ time = 0:tstep:tend;
 X = 0:xstep:Lx;
 Y = 0:ystep:Ly;
 
-K = 7; 
-L = 7;
+K = 2; 
+L = 2;
 
 % Preallocation
 T = zeros(length(X),length(Y),length(time));
@@ -36,7 +36,7 @@ a = zeros(K+1,L+1,length(time));
 
 % User parameters
 show_visuals = false; % Will show all the visualization plots subsequently
-input.switch = true; % Turn the input source on or off
+input.switch = false; % Turn the input source on or off
 input.par.type = 'sinusoid'; % {const,sinusoid} What type of input
 input.par.freq = 0.1; % [Hz]
 input.par.tstart = 5; % [s]
@@ -68,7 +68,28 @@ for k = 0:K
     end
 end
 
+%% Make phi_kl 4D matrix
+for x = 1:length(X)
+    for y = 1:length(Y)
+        for k = 0:K
+            for l = 0:L
+                phi_kl(x,y,k+1,l+1) = basisxy(X(x),Y(y),k,l,Lx,Ly);
+            end
+        end
+    end
+end
+
 %% Initial conditions and ODE solver for a
+% tic
+% for k = 0:K 
+%     for l = 0:L
+%         a0(k+1,l+1) = sum(T0.*phi_kl(:,:,k+1,l+1),'all')*xstep*ystep;
+%         a(k+1,l+1,:) = aODE(time,a0(k+1,l+1),kappa(1),rho(1),c(1),Lx,Ly,k,l,phi_u1,phi_u2,input);
+%     end
+% end
+% toc
+
+%% Initial conditions and ODE solver for a backup
 for k = 0:K 
     for l = 0:L
         for x = 1:length(X)
@@ -81,41 +102,42 @@ for k = 0:K
     end
 end
 
-%% Simulation 
+%% Temperature over time
+tic
 for t = 1:length(time)
-    for x = 1:length(X)
-        for y = 1:length(Y)
-            sumT = 0;
-            for k = 0:K
-                for l = 0:L 
-                sumT = sumT + (a(k+1,l+1,t)*basisxy(X(x),Y(y),k,l,Lx,Ly));
-                end
-            end
-            T(x,y,t) = sumT;
+    sumT = 0;
+    for k = 0:K
+        for l = 0:L 
+        sumT = sumT + a(k+1,l+1,t)*phi_kl(:,:,k+1,l+1);
         end
     end
+    T(:,:,t) = sumT;
 end
-
 toc
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Visualizations %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if show_visuals
 %% full simulation
-[X_mesh,Y_mesh] = meshgrid(X,Y);
-TaxisMin = min(min(T0))-1;
-TaxisMax = max(max(T0))+1;
+[X_mesh,Y_mesh] = ndgrid(X,Y);
+TaxisMin = min(min(T0));
+TaxisMax = max(max(T0));
+TaxisMin_switch = min(min(T0));
+TaxisMax_switch = max(max(T(:,:,end)));
 font = 15;
 figure()
 for t = 1:length(time)
-    mesh(X_mesh,Y_mesh,T(:,:,t)');  
-    if ~input.switch
+    mesh(X_mesh,Y_mesh,T(:,:,t));  
+    if input.switch
+        axis([0 Lx 0 Ly TaxisMin TaxisMax_switch]);
+    else
         axis([0 Lx 0 Ly TaxisMin TaxisMax]);
     end
-    axis([0 Lx 0 Ly 0 2]);
+
     title(sprintf('Plate temperature for time = %g [s]', round(time(t))),Interpreter='latex',FontSize=font);
     xlabel('x [m]',Interpreter='latex',FontSize=font); 
     ylabel('y [m]',Interpreter='latex',FontSize=font); 
     zlabel('T(x,y,t) [$^\circ \mathrm{C}]$',Interpreter='latex',FontSize=font);
-    pause(0.05)
+    pause(0.005)
 end
 
 %% Initial behaviour
@@ -123,11 +145,14 @@ end
 time_redux = 0.1; % percentage of shown time instances
 TaxisMin = min(min(T0))-0.2;
 TaxisMax = max(max(T0))+0.2;
+TaxisMax_switch = max(max(T(:,:,Nt*time_redux)))
 font = 15;
 figure()
 for t = 1:round((Nt*time_redux))
     mesh(X_mesh,Y_mesh,T(:,:,t));
-    if ~input.switch
+    if input.switch
+        axis([0 Lx 0 Ly TaxisMin TaxisMax_switch]);
+    else
         axis([0 Lx 0 Ly TaxisMin TaxisMax]);
     end
     title(sprintf('Plate temperature for time = %g [s]', round(time(t))),Interpreter='latex',FontSize=font);
@@ -135,7 +160,7 @@ for t = 1:round((Nt*time_redux))
     ylabel('y [m]',Interpreter='latex',FontSize=font); 
     zlabel('T(x,y,t) [$^\circ \mathrm{C}]$',Interpreter='latex',FontSize=font);
     colorbar
-    pause(0.01)
+    pause(0.05)
 end
 
 %% End behaviour
@@ -147,7 +172,9 @@ font = 15;
 figure()
 for t = Nt-round((Nt*time_redux)):Nt
     mesh(X_mesh,Y_mesh,T(:,:,t));
-    if ~input.switch
+    if input.switch
+        axis([0 Lx 0 Ly TaxisMin TaxisMax_switch]);
+    else
         axis([0 Lx 0 Ly TaxisMin TaxisMax]);
     end
     title(sprintf('Plate temperature for time = %g [s]', round(time(t))),Interpreter='latex',FontSize=font);
@@ -166,7 +193,9 @@ figure()
 
 for t = 1:Nt
     mesh(X_mesh,Y_mesh,T(:,:,t));  
-    if ~input.switch
+    if input.switch
+        axis([0 Lx 0 Ly TaxisMin TaxisMax_switch]);
+    else
         axis([0 Lx 0 Ly TaxisMin TaxisMax]);
     end
     title(sprintf('Plate temperature for time = %g [s]', round(time(t))),Interpreter='latex',FontSize=font);
@@ -234,14 +263,14 @@ for x = 1:length(X)
     for y = 1:length(Y)
         for k = 0:2
             for l = 0:2
-                phi_kl(y,x,k+1,l+1) = basisxy(X(x),Y(y),k,l,Lx,Ly);
+                phi_kl(x,y,k+1,l+1) = basisxy(X(x),Y(y),k,l,Lx,Ly);
             end
         end
     end
 end
 
 figure()
-[X_mesh,Y_mesh] = meshgrid(X,Y);
+[X_mesh,Y_mesh] = ndgrid(X,Y);
 for k = 0:2
     for l = 0:2
         mesh(X_mesh,Y_mesh,phi_kl(:,:,k+1,l+1))
