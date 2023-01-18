@@ -43,6 +43,6 @@ end
 if normalize == true
 T0 = T0./(max(abs(T0),[],'all'));
 end
-[TX,TY] = gradient(T0,X,Y);
+[TX,TY] = gradient(T0,Y,X);
 end
 

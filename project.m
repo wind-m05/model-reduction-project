@@ -1,6 +1,10 @@
 %% Project model reduction
 clear all; close all; clc
 
+% User parameters
+show_visuals = false; % Will show all the visualization plots subsequently
+source = false; % Turn the input source on or off
+
 % Properties
 Lx  = 0.2;
 Ly  = 0.3;
@@ -14,19 +18,20 @@ Tamb = 309; % Ambient temp Kelvin
 TK2C = 273;
 
 % Simulation parameters
-show_visuals = false; % Will show all the visualization plots subsequently
-Nx = 100; % Number of samples x,y,t
-Ny = 100;
-Nt = 1000;
+
+Nt = 400;
 tend = 600; % 10 minutes
 tstep = tend/(Nt-1);
-xstep = Lx/(Nx-1);
-ystep = Ly/(Ny-1);
+xstep = W/10;
+ystep = W/10;
+Nx = Lx/(xstep+1); 
+Ny = Ly/(ystep+1);
+time = 0:tstep:tend;
 X = 0:xstep:Lx;
 Y = 0:ystep:Ly;
-time = 0:tstep:tend;
-K = 5; 
-L = 5;
+
+K = 2; 
+L = 2;
 
 % Preallocation
 T = zeros(length(X),length(Y),length(time));
@@ -34,11 +39,31 @@ a0 = zeros(K+1,L+1);
 a = zeros(K+1,L+1,length(time));
 
 % Initial temperature
-k=2; % Frequency of basis in x
-l=2; % Frequency of basis in y
-[T0,T0dx,T0dy] = initialTemp(X,Y,k,l,'fourier',true);
+kinit=2; % Frequency of basis in x
+linit=2; % Frequency of basis in y
 
-%% Initial conditions
+[T0,T0dx,T0dy] = initialTemp(X,Y,kinit,linit,'fourier',true);
+
+%% Calculate phi_kl for x,y positions overlapping with u
+phi_u1 = zeros(K+1,L+1);
+phi_u2 = zeros(K+1,L+1);
+for k = 0:K
+    for l = 0:L
+        for yShort = (Ly/2-W/2):ystep:(Ly/2+W/2)
+            for xShort = (Lx/4-W/2):xstep:(Lx/4+W/2)
+                phi_u1(k+1,l+1) = phi_u1(k+1,l+1) + basisxy(xShort,yShort,k,l,Lx,Ly);
+            end
+            for xShort = (3*Lx/4-W/2):xstep:(3*Lx/4+W/2)
+                phi_u2(k+1,l+1) = phi_u2(k+1,l+1) + basisxy(xShort,yShort,k,l,Lx,Ly);
+            end
+        end
+        phi_u1(k+1,l+1) = xstep*ystep*phi_u1(k+1,l+1);
+        phi_u2(k+1,l+1) = xstep*ystep*phi_u2(k+1,l+1);
+    end
+end
+
+
+%% Initial conditions and ODE solver for a
 for k = 0:K 
     for l = 0:L
         for x = 1:length(X)
@@ -47,7 +72,7 @@ for k = 0:K
             end
         end
         a0(k+1,l+1) = a0(k+1,l+1)*xstep*ystep;
-        a(k+1,l+1,:) = aODE(time,a0(k+1,l+1),kappa(1),rho(1),c(1),Lx,Ly,k,l);
+        a(k+1,l+1,:) = aODE(time,a0(k+1,l+1),kappa(1),rho(1),c(1),Lx,Ly,k,l,phi_u1,phi_u2,source);
     end
 end
 
@@ -67,11 +92,8 @@ for t = 1:length(time)
 end
 
 
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Visualizations %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if show_visuals
-
 %% full simulation
 [X_mesh,Y_mesh] = meshgrid(X,Y);
 TaxisMin = min(min(T0))-1;
@@ -79,8 +101,10 @@ TaxisMax = max(max(T0))+1;
 font = 15;
 figure()
 for t = 1:length(time)
-    mesh(X_mesh,Y_mesh,T(:,:,t));  
-    axis([0 Lx 0 Ly TaxisMin TaxisMax]);
+    mesh(X_mesh,Y_mesh,T(:,:,t)');  
+    if ~source
+        axis([0 Lx 0 Ly TaxisMin TaxisMax]);
+    end
     title(sprintf('Plate temperature for time = %g [s]', round(time(t))),Interpreter='latex',FontSize=font);
     xlabel('x [m]',Interpreter='latex',FontSize=font); 
     ylabel('y [m]',Interpreter='latex',FontSize=font); 
@@ -89,15 +113,17 @@ for t = 1:length(time)
 end
 
 %% Initial behaviour
-[X_mesh,Y_mesh] = meshgrid(X,Y);
-time_redux = 0.05; % percentage of shown time instances
+[X_mesh,Y_mesh] = ndgrid(X,Y);
+time_redux = 0.1; % percentage of shown time instances
 TaxisMin = min(min(T0))-0.2;
 TaxisMax = max(max(T0))+0.2;
 font = 15;
 figure()
-for t = 1:round((length(time)*time_redux))
-    mesh(X_mesh,Y_mesh,T(:,:,t));  
-    axis([0 Lx 0 Ly TaxisMin TaxisMax]);
+for t = 1:round((Nt*time_redux))
+    mesh(X_mesh,Y_mesh,T(:,:,t));
+    if ~source
+        axis([0 Lx 0 Ly TaxisMin TaxisMax]);
+    end
     title(sprintf('Plate temperature for time = %g [s]', round(time(t))),Interpreter='latex',FontSize=font);
     xlabel('x [m]',Interpreter='latex',FontSize=font); 
     ylabel('y [m]',Interpreter='latex',FontSize=font); 
@@ -107,15 +133,17 @@ for t = 1:round((length(time)*time_redux))
 end
 
 %% End behaviour
-[X_mesh,Y_mesh] = meshgrid(X,Y);
-time_redux = 0.2; % percentage of shown time instances
-TaxisMin = min(min(T(:,:,end)))-min(min(T(:,:,end)))*0.25;
-TaxisMax = max(max(T(:,:,end)))+max(max(T(:,:,end)))*0.25;
+[X_mesh,Y_mesh] = ndgrid(X,Y);
+time_redux = 0.5; % percentage of shown time instances
+TaxisMin = min(min(T(:,:,end)))-min(min(T(:,:,end)))*0.025;
+TaxisMax = max(max(T(:,:,end)))+max(max(T(:,:,end)))*0.025;
 font = 15;
 figure()
-for t = time(end)-round((length(time)*time_redux)):time(end)
-    mesh(X_mesh,Y_mesh,T(:,:,t));  
-    axis([0 Lx 0 Ly TaxisMin TaxisMax]);
+for t = Nt-round((Nt*time_redux)):Nt
+    mesh(X_mesh,Y_mesh,T(:,:,t));
+    if ~source
+        axis([0 Lx 0 Ly TaxisMin TaxisMax]);
+    end
     title(sprintf('Plate temperature for time = %g [s]', round(time(t))),Interpreter='latex',FontSize=font);
     xlabel('x [m]',Interpreter='latex',FontSize=font); 
     ylabel('y [m]',Interpreter='latex',FontSize=font); 
@@ -124,15 +152,17 @@ for t = time(end)-round((length(time)*time_redux)):time(end)
 end
 
 %% Sample code for fixed colorbar
-[X_mesh,Y_mesh] = meshgrid(X,Y);
+[X_mesh,Y_mesh] = ndgrid(X,Y);
 TaxisMin = min(min(T0));
 TaxisMax = max(max(T0));
 font = 15;
 figure()
 
-for t = 1:length(time)
+for t = 1:Nt
     mesh(X_mesh,Y_mesh,T(:,:,t));  
-    axis([0 Lx 0 Ly TaxisMin TaxisMax]);
+    if ~source
+        axis([0 Lx 0 Ly TaxisMin TaxisMax]);
+    end
     title(sprintf('Plate temperature for time = %g [s]', round(time(t))),Interpreter='latex',FontSize=font);
     xlabel('x [m]',Interpreter='latex',FontSize=font); 
     ylabel('y [m]',Interpreter='latex',FontSize=font); 
@@ -219,7 +249,7 @@ title('Basis functions \phi_{k,l} on spatial domain x,y and looped over k and l'
 
 %% Show intital temperature of the plate
 figure()
-surf(X,Y,T0)
+surf(X,Y,T0')
 xlabel('x')
 ylabel('y')
 zlabel('Temperature [-]')
@@ -228,12 +258,12 @@ title('Intial temperature')
 %% Show partial derivatives of the intital temperature 
 figure()
 subplot(1,2,1)
-surf(X,Y,T0dx)
+surf(X,Y,T0dx')
 xlabel('x')
 ylabel('y')
 title('dT0/dx')
 subplot(1,2,2)
-surf(X,Y,T0dy)
+surf(X,Y,T0dy')
 xlabel('x')
 ylabel('y')
 title('dT0/dy')
