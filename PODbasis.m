@@ -1,0 +1,47 @@
+function [phiPOD,diagn] = PODbasis(T,Nx,Ny,xstep,ystep,Nt,reduced_energy_remaint)
+%PODBASIS Summary of this function goes here
+%  i want to find out if there is a difference between using the reshape
+%  function to stack all x and y data on top of each other in the rows and
+%  use the time on the columns. And just calculating a POD basis in x
+%  direciton and a POD basis in y direction and then calculating a
+%  PODbasis_xy...
+
+T_stacked = reshape(T,[Nx*Ny,Nt]);
+[U,S,V] = svd(T_stacked,'econ');
+svp = diag(S)/sum(diag(S)); % singular value percentiles
+
+indeces = find(svp<=1-reduced_energy_remaint);
+R = indeces(1);
+fprintf('POD basis is of order R =%d \n',R);
+
+phiPOD.xy = zeros(Nx,Ny,R);
+phiPOD.ddx = zeros(Nx,Ny,R);
+phiPOD.ddy = zeros(Nx,Ny,R);
+phiPOD.xy = U(:,1:R);
+
+G = eye(Nx)*sqrt(1/(xstep*ystep)); % This is G^(-1/2) THIS IS ASSUMED!
+phiPOD.xy = reshape(phiPOD.xy,[Nx,Ny,R]);
+
+for r = 1:R
+phiPOD.xy(:,:,r) = G * phiPOD.xy(:,:,r);
+end
+
+for r = 1:R
+[X, Y] = gradient(phiPOD.xy(:,:,r),xstep,ystep);
+[phiPOD.ddx(:,:,r), ~] = gradient(X,xstep,ystep);
+[~, phiPOD.ddy(:,:,r)] = gradient(Y,xstep,ystep);
+end
+
+% phiPOD.ddx = reshape(phiPOD.ddx,[Nx,Ny,R]);
+% phiPOD.ddy = reshape(phiPOD.ddy,[Nx,Ny,R]);
+
+diagn.R = R; % Diagnostics
+diagn.U = U;
+diagn.S = S;
+diagn.V = V;
+diagn.svp = svp;
+end
+
+
+
+
