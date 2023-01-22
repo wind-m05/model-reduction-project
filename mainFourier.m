@@ -25,8 +25,8 @@ Ny = Ly/(ystep)+1;
 time = 0:tstep:tend;
 X = 0:xstep:Lx;
 Y = 0:ystep:Ly;
-K = 5; 
-L = 5;
+K = 15; 
+L = 15;
 
 % Preallocation
 T = zeros(length(X),length(Y),length(time));
@@ -41,32 +41,29 @@ input.par.type = 'sinusoid'; % {const,sinusoid} What type of input
 input.par.freq = 0.1; % [Hz]
 input.par.tstart = 5; % [s]
 input.par.tend = tend; % [s]
-input.par.amp1 = 10; % [-]
-input.par.amp2 = 10;
+input.par.amp1 = 1; % [-]
+input.par.amp2 = 1;
 
 
 % Initial temperature
 kinit=2; % Frequency of basis in x
 linit=2; % Frequency of basis in y
-[T0,T0dx,T0dy] = initialTemp(X,Y,kinit,linit,'fourier',true);
+[T0,T0dx,T0dy] = initialTemp(X,Y,kinit,linit,'gauss',true);
 
 %% Calculate phi_kl for x,y positions overlapping with u
-% phi_u1 = zeros(K+1,L+1);
-% phi_u2 = zeros(K+1,L+1);
-% for k = 0:K
-%     for l = 0:L
-%         for yShort = (Ly/2-W/2):ystep:(Ly/2+W/2)
-%             for xShort = (Lx/4-W/2):xstep:(Lx/4+W/2)
-%                 phi_u1(k+1,l+1) = phi_u1(k+1,l+1) + basisxy(xShort,yShort,k,l,Lx,Ly);
-%             end
-%             for xShort = ((3*Lx/4)-W/2):xstep:((3*Lx/4)+W/2)
-%                 phi_u2(k+1,l+1) = phi_u2(k+1,l+1) + basisxy(xShort,yShort,k,l,Lx,Ly);
-%             end
-%         end
-%         phi_u1(k+1,l+1) = phi_u1(k+1,l+1)*xstep*ystep;
-%         phi_u2(k+1,l+1) = phi_u2(k+1,l+1)*xstep*ystep;
-%     end
-% end
+
+% Actuator positions
+yindex = (Ly/2-W/2):ystep:(Ly/2+W/2);
+xindex1 = (Lx/4-W/2):xstep:(Lx/4+W/2);
+xindex2 = ((3*Lx/4)-W/2):xstep:((3*Lx/4)+W/2);
+
+indx1 = discretize(xindex1,X);
+indx2 = discretize(xindex2,X);
+indy  = discretize(yindex,Y); 
+input.u1 = zeros(length(X),length(Y));
+input.u2 = zeros(length(X),length(Y));
+input.u1(indx1,indy) = 1;
+input.u2(indx2,indy) = 1;
 
 % Make phi_kl 4D matrix
 phi_kl = zeros(length(X),length(Y),K+1,L+1);
@@ -85,7 +82,7 @@ end
 for k = 0:K 
     for l = 0:L
         a0(k+1,l+1) = sum(T0.*phi_kl(:,:,k+1,l+1),'all')*xstep*ystep;
-        a(k+1,l+1,:) = aODE(time,a0(k+1,l+1),kappa(1),rho(1),c(1),Lx,Ly,k,l,phi_u1,phi_u2,input);
+        a(k+1,l+1,:) = aODE(time,a0(k+1,l+1),kappa(1),rho(1),c(1),Lx,Ly,xstep,ystep,k+1,l+1,phi_kl,input);
     end
 end
 
