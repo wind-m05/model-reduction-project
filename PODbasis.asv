@@ -1,5 +1,7 @@
 function [phiPOD,diagn] = PODbasis(T,Nx,Ny,xstep,ystep,Nt,reduced_energy_remaint)
 %PODBASIS Summary of this function goes here
+
+
 T_stacked = reshape(T,[Nx*Ny,Nt]);
 [U,S,V] = svd(T_stacked,'econ');
 svp = diag(S)/sum(diag(S)); % singular value percentiles
@@ -14,7 +16,7 @@ phiPOD.ddy = zeros(Nx,Ny,R);
 phiPOD.xy = U(:,1:R);
 
 G = eye(Nx)*sqrt(1/(xstep*ystep)); % This is G^(-1/2) THIS IS ASSUMED!
-G = eye(Nx); % This is G^(-1/2) THIS IS ASSUMED!
+% G = eye(Nx); % This is G^(-1/2) THIS IS ASSUMED!
 phiPOD.xy = reshape(phiPOD.xy,[Nx,Ny,R]);
 
 for r = 1:R

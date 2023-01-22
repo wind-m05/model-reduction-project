@@ -16,7 +16,7 @@ for t = 1:length(time)
 %     else
 %         axis([0 Lx 0 Ly TaxisMin TaxisMax]);
 %     end
-     axis([0 Lx 0 Ly -1 30])
+    axis([0 Lx 0 Ly -1 +1]) 
     title(sprintf('Plate temperature for time = %g [s]', round(time(t))),Interpreter='latex',FontSize=font);
     xlabel('x [m]',Interpreter='latex',FontSize=font); 
     ylabel('y [m]',Interpreter='latex',FontSize=font); 
@@ -35,11 +35,12 @@ fps = 60;
 figure()
 for t = 1:round((Nt*time_redux))
     mesh(X_mesh,Y_mesh,T(:,:,t));
-    if input.switch
-        axis([0 Lx 0 Ly TaxisMin TaxisMax_switch]);
-    else
-        axis([0 Lx 0 Ly TaxisMin TaxisMax]);
-    end
+%     if input.switch
+%         axis([0 Lx 0 Ly TaxisMin TaxisMax_switch]);
+%     else
+%         axis([0 Lx 0 Ly TaxisMin TaxisMax]);
+%     end
+    
     title(sprintf('Plate temperature for time = %g [s]', round(time(t))),Interpreter='latex',FontSize=font);
     xlabel('x [m]',Interpreter='latex',FontSize=font); 
     ylabel('y [m]',Interpreter='latex',FontSize=font); 
@@ -107,6 +108,16 @@ end
 xlabel('Time [t]')
 ylabel('[-]')
 title('Time solutions of a_k,l')
+grid on
+%% Solutions of ODE solver for a_r over time
+figure()
+for r= 1:diagn.R
+   plot(squeeze(a(:,r)))
+   hold on
+end
+xlabel('Time [t]')
+ylabel('[-]')
+title('Time solutions of a_r')
 grid on
 
 %% Plot initial conditions a_kl
@@ -201,5 +212,12 @@ figure()
 plot(real(diagn.U(:,1:3)))
 title('The first 3 dominant modes')
 
-%% Check if the POD basis is orthogonal in its columns
+%% Check if the POD basis gradients are actually what you want
+figure()
+surf(phiPOD.xy(:,:,1))
+figure()
+surf(phiPOD.ddx(:,:,1))
+figure()
+surf(phiPOD.ddy(:,:,1))
+figure()
 % test = sum(phiPOD(:,:,1)'*phiPOD(:,:,2),'all')*xstep*ystep

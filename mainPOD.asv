@@ -49,6 +49,8 @@ reduced_energy_remaint = 0.9; % Ratio of information included into the reduced o
 [phiPOD,diagn] = PODbasis(T_snap,Nx,Ny,xstep,ystep,Nt,reduced_energy_remaint);
 
 % Calculate phiPOD for x,y positions overlapping with u
+phi_u1 = zeros(diagn.R);
+phi_u2 = zeros(diagn.R);
 a0 = zeros(diagn.R,1);
 a = zeros(diagn.R,Nt);
 
@@ -66,17 +68,13 @@ indy  = discretize(yindex,Y);
 % end
 
 
+
 % % Initial conditions and ODE solver for a
-for r = 1:diagn.R 
-        a0(r) = sum(T0.*phiPOD.xy(:,:,r),'all')*xstep*ystep;
-end
+% for r = 1:diagn.R 
+%         a0(r) = sum(T0.*phiPOD.xy(:,:,r),'all')*xstep*ystep;
+% end
 % a = aODE_POD(time,a0,kappa(1),rho(1),c(1),Lx,Ly,xstep,ystep,diagn.R,phiPOD,input);
-%% try to compute a(t) in state space format and check the difference
-A = phiPOD.dotp;
-B = eye((size(phiPOD.dotp,1)))*0;
-C = eye((size(phiPOD.dotp,1)))*0;
-sys = ss(A,B,C,0);
-[y,~,x] = initial(sys,a0,time);
+
 
 
 T = zeros(length(X),length(Y),length(time));
@@ -84,7 +82,7 @@ T = zeros(length(X),length(Y),length(time));
 for t = 1:length(time)
     sumT = 0;
     for r = 1:diagn.R
-        sumT = sumT + x(t,r)*phiPOD.xy(:,:,r); 
+        sumT = sumT + a(t,r)*phiPOD.xy(:,:,r);
     end
     T(:,:,t) = sumT;
 end

@@ -53,7 +53,10 @@ tcounter = tcounter+1;
 end
 end
 
-%% Test input 2D in time 
-
-        u1 = abs(cos(2*pi*par.freq*t));
-        u2 = abs(sin(2*pi*par.freq*t));
+%% Test gradients functions with simple functions
+[X1,X2] = ndgrid(-2:.2:2);
+phiPOD.xy = X1 .* exp(-X1.^2 - X2.^2);
+[X, Y] = gradient(phiPOD.xy,.2,.2);
+[phiPOD.ddx, ~] = gradient(X,.2,.2);
+[~, phiPOD.ddy] = gradient(Y,.2,.2);
+figure
