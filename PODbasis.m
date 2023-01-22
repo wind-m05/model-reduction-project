@@ -14,7 +14,7 @@ phiPOD.ddy = zeros(Nx,Ny,R);
 phiPOD.xy = U(:,1:R);
 
 G = eye(Nx)*sqrt(1/(xstep*ystep)); % This is G^(-1/2) THIS IS ASSUMED!
-G = eye(Nx); % This is G^(-1/2) THIS IS ASSUMED!
+% G = eye(Nx); % This is G^(-1/2) THIS IS ASSUMED!
 phiPOD.xy = reshape(phiPOD.xy,[Nx,Ny,R]);
 
 for r = 1:R

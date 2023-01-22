@@ -5,7 +5,7 @@
 TaxisMin = min(min(T0));
 TaxisMax = max(max(T0));
 TaxisMin_switch = min(min(T0));
-TaxisMax_switch = max(max(T(:,:,end)));
+TaxisMax_switch = max(max(T_snap(:,:,end)));
 font = 15;
 fps = 60;
 figure()
@@ -21,8 +21,29 @@ for t = 1:length(time)
     xlabel('x [m]',Interpreter='latex',FontSize=font); 
     ylabel('y [m]',Interpreter='latex',FontSize=font); 
     zlabel('T(x,y,t) [$^\circ \mathrm{C}]$',Interpreter='latex',FontSize=font);
+    pause(0.00001)
+end
+
+%% Residual simulation
+for t = 1:length(time)
+T_res(:,:,t) = T(:,:,t)-T_snap(:,:,t);
+end
+
+for t = 1:length(time)
+    mesh(X_mesh,Y_mesh,T_res(:,:,t));  
+%     if input.switch
+%         axis([0 Lx 0 Ly TaxisMin TaxisMax_switch]);
+%     else
+%         axis([0 Lx 0 Ly TaxisMin TaxisMax]);
+%     end
+    axis([0 Lx 0 Ly -1 +1]) 
+    title(sprintf('Plate temperature for time = %g [s]', round(time(t))),Interpreter='latex',FontSize=font);
+    xlabel('x [m]',Interpreter='latex',FontSize=font); 
+    ylabel('y [m]',Interpreter='latex',FontSize=font); 
+    zlabel('T(x,y,t) [$^\circ \mathrm{C}]$',Interpreter='latex',FontSize=font);
     pause(1/fps)
 end
+
 
 %% Initial behaviour
 [X_mesh,Y_mesh] = ndgrid(X,Y);

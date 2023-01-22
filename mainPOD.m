@@ -44,7 +44,7 @@ linit=2; % Frequency of basis in y
 
 T_snap = load('T_snap.mat').T;
 
-reduced_energy_remaint = 0.9; % Ratio of information included into the reduced order model
+reduced_energy_remaint = 0.999; % Ratio of information included into the reduced order model
 
 [phiPOD,diagn] = PODbasis(T_snap,Nx,Ny,xstep,ystep,Nt,reduced_energy_remaint);
 
@@ -72,7 +72,7 @@ for r = 1:diagn.R
 end
 % a = aODE_POD(time,a0,kappa(1),rho(1),c(1),Lx,Ly,xstep,ystep,diagn.R,phiPOD,input);
 %% try to compute a(t) in state space format and check the difference
-A = phiPOD.dotp;
+A = kappa(1)/(rho(1)*c(1))*phiPOD.dotp;
 B = eye((size(phiPOD.dotp,1)))*0;
 C = eye((size(phiPOD.dotp,1)))*0;
 sys = ss(A,B,C,0);
