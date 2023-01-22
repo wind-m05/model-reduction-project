@@ -72,8 +72,9 @@ indy  = discretize(yindex,Y);
 % Initial conditions and ODE solver for a
 for r = 1:diagn.R 
         a0(r) = sum(T0.*phiPOD.xy(:,:,r),'all')*xstep*ystep;
-        a(r,:) = aODE_POD(time,a0(r),kappa(1),rho(1),c(1),Lx,Ly,diagn.R,phiPOD,phi_u1,phi_u2,input);
+%         a(r,:) = aODE_POD(time,a0(r),kappa(1),rho(1),c(1),Lx,Ly,diagn.R,phiPOD,phi_u1,phi_u2,input);
 end
+a= aODE_POD(time,a0,kappa(1),rho(1),c(1),Lx,Ly,diagn.R,phiPOD,phi_u1,phi_u2,input);
 
 T = zeros(length(X),length(Y),length(time));
 % Temperature over time

@@ -51,8 +51,8 @@ linit=2; % Frequency of basis in y
 [T0,T0dx,T0dy] = initialTemp(X,Y,kinit,linit,'fourier',true);
 
 %% Calculate phi_kl for x,y positions overlapping with u
-% phi_u1 = zeros(K+1,L+1);
-% phi_u2 = zeros(K+1,L+1);
+phi_u1 = zeros(K+1,L+1);
+phi_u2 = zeros(K+1,L+1);
 % for k = 0:K
 %     for l = 0:L
 %         for yShort = (Ly/2-W/2):ystep:(Ly/2+W/2)
@@ -67,6 +67,13 @@ linit=2; % Frequency of basis in y
 %         phi_u2(k+1,l+1) = phi_u2(k+1,l+1)*xstep*ystep;
 %     end
 % end
+a0(k+1,l+1) = sum(T0.*phi_kl(:,:,k+1,l+1),'all')*xstep*ystep;
+for k = 0:K
+    for l = 0:L
+        phi_u1(k+1,) = sum
+
+    end
+end
 
 % Make phi_kl 4D matrix
 phi_kl = zeros(length(X),length(Y),K+1,L+1);
@@ -79,7 +86,6 @@ for x = 1:length(X)
         end
     end
 end
-
 
 % Initial conditions and ODE solver for a
 for k = 0:K 

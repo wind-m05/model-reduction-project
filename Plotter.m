@@ -29,7 +29,7 @@ end
 time_redux = 0.1; % percentage of shown time instances
 TaxisMin = min(min(T0))-0.2;
 TaxisMax = max(max(T0))+0.2;
-TaxisMax_switch = max(max(T(:,:,round(Nt*time_redux)+1)))
+TaxisMax_switch = max(max(T(:,:,round(Nt*time_redux)+1)));
 font = 15;
 fps = 60;
 figure()

@@ -1,10 +1,6 @@
 function [phiPOD,diagn] = PODbasis(T,Nx,Ny,xstep,ystep,Nt,reduced_energy_remaint)
 %PODBASIS Summary of this function goes here
-%  i want to find out if there is a difference between using the reshape
-%  function to stack all x and y data on top of each other in the rows and
-%  use the time on the columns. And just calculating a POD basis in x
-%  direciton and a POD basis in y direction and then calculating a
-%  PODbasis_xy...
+
 
 T_stacked = reshape(T,[Nx*Ny,Nt]);
 [U,S,V] = svd(T_stacked,'econ');
