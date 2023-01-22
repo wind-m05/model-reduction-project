@@ -11,12 +11,12 @@ fps = 60;
 figure()
 for t = 1:length(time)
     mesh(X_mesh,Y_mesh,T(:,:,t));  
-    if input.switch
-        axis([0 Lx 0 Ly TaxisMin TaxisMax_switch]);
-    else
-        axis([0 Lx 0 Ly TaxisMin TaxisMax]);
-    end
-
+%     if input.switch
+%         axis([0 Lx 0 Ly TaxisMin TaxisMax_switch]);
+%     else
+%         axis([0 Lx 0 Ly TaxisMin TaxisMax]);
+%     end
+     axis([0 Lx 0 Ly -1 30])
     title(sprintf('Plate temperature for time = %g [s]', round(time(t))),Interpreter='latex',FontSize=font);
     xlabel('x [m]',Interpreter='latex',FontSize=font); 
     ylabel('y [m]',Interpreter='latex',FontSize=font); 

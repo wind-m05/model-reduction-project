@@ -25,8 +25,8 @@ Ny = Ly/(ystep)+1;
 time = 0:tstep:tend;
 X = 0:xstep:Lx;
 Y = 0:ystep:Ly;
-K = 15; 
-L = 15;
+K = 20; 
+L = 20;
 
 % Preallocation
 T = zeros(length(X),length(Y),length(time));
@@ -36,13 +36,13 @@ a = zeros(K+1,L+1,length(time));
 
 % User parameters
 show_visuals = false; % Will show all the visualization plots subsequently
-input.switch = true; % Turn the input source on or off
-input.par.type = 'sinusoid'; % {const,sinusoid} What type of input
-input.par.freq = 0.1; % [Hz]
+input.switch = false; % Turn the input source on or off
+input.par.type = 'const'; % {const,sinusoid} What type of input
+input.par.freq = 0.01; % [Hz]
 input.par.tstart = 5; % [s]
 input.par.tend = tend; % [s]
-input.par.amp1 = 1; % [-]
-input.par.amp2 = 1;
+input.par.amp1 = 0.4; % [-]
+input.par.amp2 = 0.4;
 
 
 % Initial temperature
