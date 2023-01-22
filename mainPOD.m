@@ -44,7 +44,7 @@ linit=2; % Frequency of basis in y
 
 T_snap = load('T_snap.mat').T;
 
-reduced_energy_remaint = 0.999; % Ratio of information included into the reduced order model
+reduced_energy_remaint = 0.99; % Ratio of information included into the reduced order model
 
 [phiPOD,diagn] = PODbasis(T_snap,Nx,Ny,xstep,ystep,Nt,reduced_energy_remaint);
 

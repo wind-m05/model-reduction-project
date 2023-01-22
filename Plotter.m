@@ -10,13 +10,13 @@ font = 15;
 fps = 60;
 figure()
 for t = 1:length(time)
-    mesh(X_mesh,Y_mesh,T(:,:,t));  
+    mesh(X_mesh,Y_mesh,T_snap(:,:,t));  
 %     if input.switch
 %         axis([0 Lx 0 Ly TaxisMin TaxisMax_switch]);
 %     else
 %         axis([0 Lx 0 Ly TaxisMin TaxisMax]);
 %     end
-    axis([0 Lx 0 Ly -1 +1]) 
+    axis([0 Lx 0 Ly -0.1 +1]) 
     title(sprintf('Plate temperature for time = %g [s]', round(time(t))),Interpreter='latex',FontSize=font);
     xlabel('x [m]',Interpreter='latex',FontSize=font); 
     ylabel('y [m]',Interpreter='latex',FontSize=font); 
@@ -143,8 +143,8 @@ grid on
 
 %% Plot initial conditions a_kl
 figure()
-k = 0:K
-l = 0:L
+k = 0:K;
+l = 0:L;
 surf(k,l,a0)
 colormap default
 colorbar
@@ -216,7 +216,7 @@ title('dT0/dy')
 %% Runtime simulation visual
 psi = [1,2,5,7,10,20]; % Increasing order of K and L
 t = [1,2.11,9.98,18.35,34.6,142]; % Increasing runtime
-p = polyfit(psi,t,5)
+p = polyfit(psi,t,5);
 figure()
 plot(psi,t)
 psi_des = 1:100;
