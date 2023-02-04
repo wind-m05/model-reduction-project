@@ -25,8 +25,8 @@ Ny = Ly/(ystep)+1;
 time = 0:tstep:tend;
 X = 0:xstep:Lx;
 Y = 0:ystep:Ly;
-K = 10; 
-L = 10;
+K = 70; 
+L = 70;
 
 % Preallocation
 T = zeros(length(X),length(Y),length(time));
@@ -82,19 +82,43 @@ end
 for k = 0:K 
     for l = 0:L
         a0(k+1,l+1) = sum(T0.*phi_kl(:,:,k+1,l+1),'all')*xstep*ystep;
-        a(k+1,l+1,:) = aODE(time,a0(k+1,l+1),kappa(1),rho(1),c(1),Lx,Ly,xstep,ystep,k+1,l+1,phi_kl,input);
     end
 end
+
+% for k = 1:K
+%     for l = 1:L
+%     [X, Y] = gradient(phi_kl(:,:,k,l),xstep,ystep);
+%     [phi_kl_ddx(:,:,k,l), phi_kl_dxdy(:,:,k,l)] = gradient(X,xstep,ystep);
+%     [phi_kl_dydx(:,:,k,l), phi_kl_ddy(:,:,k,l)] = gradient(Y,xstep,ystep);
+%     end
+% end
+
+A = zeros(K,L);
+for k = 0:K
+    for l = 0:L
+    A(k+1,l+1) = -kappa(1)/(rho(1)*c(1))*((k^2*pi/Lx^2)+(l^2*pi^2/Ly^2));
+    end
+end
+A = reshape(A,(K+1)*(L+1),1);
+a0 = reshape(a0,(K+1)*(L+1),1);
+A_ = diag(A);
+
+%% try to compute a(t) in state space format and check the difference
+B = eye((K+1)*(L+1),1)*0;
+C = eye(1,(K+1)*(L+1))*0;
+sys = ss(A_,B,C,0);
+[y,~,x] = initial(sys,a0,time);
+
+x = reshape(x,length(time),K+1,L+1);
 
 % Temperature over time
 for t = 1:length(time)
     sumT = 0;
     for k = 0:K
-        for l = 0:L 
-        sumT = sumT + a(k+1,l+1,t)*phi_kl(:,:,k+1,l+1);
+        for l = 0:L
+        sumT = sumT + x(t,k+1,l+1)*phi_kl(:,:,k+1,l+1); 
         end
     end
     T(:,:,t) = sumT;
 end
-% save('T_snap.mat','T')
-
+save('T_snap.mat','T')

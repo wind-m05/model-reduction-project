@@ -33,6 +33,7 @@ T_res(:,:,t) = T(:,:,t)-T_snap(:,:,t);
 end
 font = 15;
 fps = 60;
+figure()
 for t = 1:length(time)
     mesh(X_mesh,Y_mesh,T_res(:,:,t));  
 %     if input.switch
@@ -53,6 +54,7 @@ for t = 1:length(time)
 [U,S,V] = svd(abs(T_res(:,:,t)));
 T_maxsvd(t) = max(diag(S));
 end
+figure()
 plot(time,T_maxsvd)
 %% Initial behaviour
 [X_mesh,Y_mesh] = ndgrid(X,Y);

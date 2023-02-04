@@ -31,8 +31,10 @@ for r = 1:R
 [phiPOD.ddx(:,:,r), phiPOD.dxdy(:,:,r)] = gradient(X,xstep,ystep);
 [phiPOD.dydx(:,:,r), phiPOD.ddy(:,:,r)] = gradient(Y,xstep,ystep);
 end
+
 phiPOD.grad = phiPOD.ddx+phiPOD.ddy+phiPOD.dxdy+phiPOD.dydx;
 phiPOD.dotp = zeros(R,R);
+
 % for i = 1 :R
 %     for j = 1:R
 %     phiPOD.dotp(i,j) = (sum(phiPOD.xy(:,:,i).*phiPOD.ddx(:,:,j),'all')+ ...
