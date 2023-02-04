@@ -1,16 +1,21 @@
-function [u1,u2] = heatInput(t,par)
+function [u1,u2] = heatInput(time,par)
+for t = 1 : length(time)
     if(t>=par.tstart && t<=par.tend)
-
         if strcmp(par.type, 'const')
-        u1 = par.amp1;
-        u2 = par.amp2;
+        u1(t) = par.amp1;
+        u2(t) = par.amp2;
         
-        elseif strcmp(par.type, 'sinusoid')
-        u1 = par.amp1*cos(2*pi*par.freq*t);
-        u2 = par.amp2*sin(2*pi*par.freq*t);
+        elseif strcmp(par.type, 'sine')
+        u1(t) = par.amp1*cos(2*pi*par.freq*t);
+        u2(t) = par.amp2*sin(2*pi*par.freq*t);
         end
     else
-        u1 = 0;
-        u2 = 0;
+        u1(t) = 0;
+        u2(t) = 0;
     end
+ 
+end
+
+% u1 = input.par.amp1*cos(2*pi*input.par.freq*time);
+% u2 = input.par.amp2*sin(2*pi*input.par.freq*time);
 end

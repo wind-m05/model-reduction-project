@@ -37,7 +37,7 @@ a = zeros(K+1,L+1,length(time));
 % User parameters
 show_visuals = false; % Will show all the visualization plots subsequently
 input.switch = false; % Turn the input source on or off
-input.par.type = 'sinusoid'; % {const,sinusoid} What type of input
+input.par.type = 'sine'; % {const,sine} What type of input
 input.par.freq = 0.01; % [Hz]
 input.par.tstart = 5; % [s]
 input.par.tend = tend; % [s]
@@ -78,20 +78,20 @@ for x = 1:length(X)
 end
 
 
-% Initial conditions and ODE solver for a
+%% Initial conditions and ODE solver for a
 for k = 0:K 
     for l = 0:L
         a0(k+1,l+1) = sum(T0.*phi_kl(:,:,k+1,l+1),'all')*xstep*ystep;
     end
 end
 
-for k = 1:K
-    for l = 1:L
-    [phi_kl_dx, phi_kl_dy] = gradient(phi_kl(:,:,k,l),xstep,ystep);
-    [phi_kl_ddx(:,:,k,l), phi_kl_dxdy(:,:,k,l)] = gradient(phi_kl_dx,xstep,ystep);
-    [phi_kl_dydx(:,:,k,l), phi_kl_ddy(:,:,k,l)] = gradient(phi_kl_dy,xstep,ystep);
-    end
-end
+% for k = 1:K
+%     for l = 1:L
+%     [phi_kl_dx, phi_kl_dy] = gradient(phi_kl(:,:,k,l),xstep,ystep);
+%     [phi_kl_ddx(:,:,k,l), phi_kl_dxdy(:,:,k,l)] = gradient(phi_kl_dx,xstep,ystep);
+%     [phi_kl_dydx(:,:,k,l), phi_kl_ddy(:,:,k,l)] = gradient(phi_kl_dy,xstep,ystep);
+%     end
+% end
 
 A = zeros(K,L);
 for k = 0:K
@@ -104,41 +104,34 @@ a0 = reshape(a0,(K+1)*(L+1),1);
 A_ = diag(A);
 
 %% Without input
-B = eye((K+1)*(L+1),1)*0;
-C = eye(1,(K+1)*(L+1))*0;
-sys = ss(A_,B,C,0);
-[y,~,x] = initial(sys,a0,time);
-
+% B = eye((K+1)*(L+1),1)*0;
+% C = eye(1,(K+1)*(L+1))*0;
+% sys = ss(A_,B,C,0);
+% [y,~,x] = initial(sys,a0,time);
+% x = reshape(x,length(time),K+1,L+1);
 %% With input
-% You have 2 inputs, so B should have 2 columns, and everything that is
-% connected with space should be in B as the selector. And everything that
-% is with time should be in the source and just be defined as u(1) and u(2)
-% sinusoids or whatever...
-source = zeros(length(time),K+1,L+1);
+source = zeros(length(time),2);
 for k = 0:K
     for l = 0:L
         B_1(k+1,l+1) = sum(input.u1.*phi_kl(:,:,k+1,l+1),'all')*xstep*ystep;
         B_2(k+1,l+1) = sum(input.u2.*phi_kl(:,:,k+1,l+1),'all')*xstep*ystep;
-        for t = 1:length(time)
-        [u1, u2] = heatInput(t,input.par); 
-        source(t,k+1,l+1) = sum(u1*input.u1.*phi_kl(:,:,k+1,l+1)+u2*input.u2.*phi_kl(:,:,k+1,l+1),'all')*xstep*ystep;
-        end
     end
 end
 B_1 = reshape(B_1,(K+1)*(L+1),1);
 B_2 = reshape(B_2,(K+1)*(L+1),1);
 B = (1/rho(1)*c(1)).*[B_1 B_2];
 
-u1 = input.par.amp1*cos(2*pi*input.par.freq*time);
-u2 = input.par.amp2*sin(2*pi*input.par.freq*time);
+if input.switch
+[u1,u2] = heatInput(time,input.par);
 source = [u1' u2'];
+end
+
 C = eye(1,(K+1)*(L+1))*0;
 sys = ss(A_,B,C,0);
-[y,~,x] = lsim(sys,source,time,a0);
-
+[y,~,x] = lsim(sys,source,time,a0,'zoh');
 x = reshape(x,length(time),K+1,L+1);
 
-% Temperature over time
+%% Temperature over time
 for t = 1:length(time)
     sumT = 0;
     for k = 0:K

@@ -7,7 +7,7 @@ function [T0,TX,TY] = initialTemp(X,Y,k,l,selector,normalize)
 % Normalize = true/false
 % Output: T0     = is temperature of a Gaussian shape at every x,y
 % element
-stdx = 0.03;
+stdx = 0.01;
 stdy=stdx;
 pitsize = 1;
 

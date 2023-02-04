@@ -26,15 +26,18 @@ time = 0:tstep:tend;
 X = 0:xstep:Lx;
 Y = 0:ystep:Ly;
 
+% Preallocation
+T = zeros(length(X),length(Y),length(time));
+
 % User parameters
 show_visuals = false; % Will show all the visualization plots subsequently
 input.switch = false; % Turn the input source on or off
 input.par.type = 'sinusoid'; % {const,sinusoid} What type of input
-input.par.freq = 0.1; % [Hz]
+input.par.freq = 0.01; % [Hz]
 input.par.tstart = 5; % [s]
 input.par.tend = tend; % [s]
-input.par.amp1 = 10; % [-]
-input.par.amp2 = 10;
+input.par.amp1 = 0.4; % [-]
+input.par.amp2 = 0.4;
 
 
 % Initial temperature
@@ -42,45 +45,60 @@ kinit=2; % Frequency of basis in x
 linit=2; % Frequency of basis in y
 [T0,T0dx,T0dy] = initialTemp(X,Y,kinit,linit,'gauss',true);
 
-T_snap = load('T_snap_backup.mat').T;
+T_snap = load('T_snap.mat').T;
 
-reduced_energy_remaint = 0.9999; % Ratio of information included into the reduced order model
+reduced_energy_remaint = 0.5; % Ratio of information included into the reduced order model
 
 [phiPOD,diagn] = PODbasis(T_snap,Nx,Ny,xstep,ystep,Nt,reduced_energy_remaint);
 
-% Calculate phiPOD for x,y positions overlapping with u
+%% Calculate phiPOD for x,y positions overlapping with u
 a0 = zeros(diagn.R,1);
 a = zeros(diagn.R,Nt);
 
+% Actuator positions
 yindex = (Ly/2-W/2):ystep:(Ly/2+W/2);
 xindex1 = (Lx/4-W/2):xstep:(Lx/4+W/2);
 xindex2 = ((3*Lx/4)-W/2):xstep:((3*Lx/4)+W/2);
 
 indx1 = discretize(xindex1,X);
 indx2 = discretize(xindex2,X);
-indy  = discretize(yindex,Y);  
+indy  = discretize(yindex,Y); 
+input.u1 = zeros(length(X),length(Y));
+input.u2 = zeros(length(X),length(Y));
+input.u1(indx1,indy) = 1;
+input.u2(indx2,indy) = 1;
 
-% for r = 1:diagn.R
-%     phi_u1(r) = sum(phiPOD(indx1,indy,r),'all')*xstep*ystep;
-%     phi_u2(r) = sum(phiPOD(indx2,indy,r),'all')*xstep*ystep;
-% end
-
-
-% % Initial conditions and ODE solver for a
+%% Initial conditions and ODE solver for a
 for r = 1:diagn.R 
         a0(r) = sum(T0.*phiPOD.xy(:,:,r),'all')*xstep*ystep;
 end
 % a = aODE_POD(time,a0,kappa(1),rho(1),c(1),Lx,Ly,xstep,ystep,diagn.R,phiPOD,input);
-%% try to compute a(t) in state space format and check the difference
+
+%% Without input
 A = kappa(1)/(rho(1)*c(1))*phiPOD.dotp;
 B = eye((size(phiPOD.dotp,1)))*0;
 C = eye((size(phiPOD.dotp,1)))*0;
 sys = ss(A,B,C,0);
 [y,~,x] = initial(sys,a0,time);
 
+%% With input
+source = zeros(length(time),2);
+for r = 1:diagn.R 
+        B_1(r) = sum(input.u1.*phiPOD.xy(:,:,r),'all')*xstep*ystep;
+        B_2(r) = sum(input.u2.*phiPOD.xy(:,:,r),'all')*xstep*ystep;
+end
+B_1 = reshape(B_1,diagn.R,1);
+B_2 = reshape(B_2,diagn.R,1);
+B = (1/rho(1)*c(1)).*[B_1 B_2];
+if input.switch
+[u1,u2] = heatInput(time,input.par);
+source = [u1' u2'];
+end
+C = eye(1,diagn.R)*0;
+sys = ss(A,B,C,0);
+[y,~,x] = lsim(sys,source,time,a0,'zoh');
 
-T = zeros(length(X),length(Y),length(time));
-% Temperature over time
+%% Temperature over time
 for t = 1:length(time)
     sumT = 0;
     for r = 1:diagn.R

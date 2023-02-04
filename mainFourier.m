@@ -96,7 +96,7 @@ for t = 1:length(time)
     end
     T(:,:,t) = sumT;
 end
-% save('T_snap.mat','T')
+save('T_snap.mat','T')
 
 
 

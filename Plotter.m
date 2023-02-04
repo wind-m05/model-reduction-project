@@ -1,8 +1,13 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Visualizations %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+% T_snap = load('T_snap_backup.mat').T;
+%% Plot critical point
+figure()
+surf(T(:,:,30))
+title('POD')
+figure()
+surf(T_snap(:,:,30))
+title('Fourier')
 %% full simulation
-T_snap = load('T_snap.mat').T;
-
 [X_mesh,Y_mesh] = ndgrid(X,Y);
 TaxisMin = min(min(T0));
 TaxisMax = max(max(T0));
@@ -23,7 +28,7 @@ for t = 1:length(time)
     xlabel('x [m]',Interpreter='latex',FontSize=font); 
     ylabel('y [m]',Interpreter='latex',FontSize=font); 
     zlabel('T(x,y,t) [$^\circ \mathrm{C}]$',Interpreter='latex',FontSize=font);
-    pause(0.00001)
+    pause(1/fps)
 end
 
 %% Residual simulation
@@ -43,7 +48,7 @@ for t = 1:length(time)
 %     else
 %         axis([0 Lx 0 Ly TaxisMin TaxisMax]);
 %     end
-    axis([0 Lx 0 Ly TaxisMin TaxisMax])  
+    axis([0 Lx 0 Ly -1 1])  
     title(sprintf('Plate temperature for time = %g [s]', round(time(t))),Interpreter='latex',FontSize=font);
     xlabel('x [m]',Interpreter='latex',FontSize=font); 
     ylabel('y [m]',Interpreter='latex',FontSize=font); 
@@ -74,7 +79,6 @@ for t = 1:round((Nt*time_redux))
 %     else
 %         axis([0 Lx 0 Ly TaxisMin TaxisMax]);
 %     end
-    
     title(sprintf('Plate temperature for time = %g [s]', round(time(t))),Interpreter='latex',FontSize=font);
     xlabel('x [m]',Interpreter='latex',FontSize=font); 
     ylabel('y [m]',Interpreter='latex',FontSize=font); 
