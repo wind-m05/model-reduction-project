@@ -1,16 +1,18 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Visualizations %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% full simulation
+T_snap = load('T_snap.mat').T;
+
 [X_mesh,Y_mesh] = ndgrid(X,Y);
 TaxisMin = min(min(T0));
 TaxisMax = max(max(T0));
 TaxisMin_switch = min(min(T0));
-TaxisMax_switch = max(max(T_snap(:,:,end)));
+TaxisMax_switch = max(max(T(:,:,end)));
 font = 15;
 fps = 60;
 figure()
 for t = 1:length(time)
-    mesh(X_mesh,Y_mesh,T_snap(:,:,t));  
+    mesh(X_mesh,Y_mesh,T(:,:,t));  
 %     if input.switch
 %         axis([0 Lx 0 Ly TaxisMin TaxisMax_switch]);
 %     else
@@ -25,10 +27,12 @@ for t = 1:length(time)
 end
 
 %% Residual simulation
+[X_mesh,Y_mesh] = ndgrid(X,Y);
 for t = 1:length(time)
 T_res(:,:,t) = T(:,:,t)-T_snap(:,:,t);
 end
-
+font = 15;
+fps = 60;
 for t = 1:length(time)
     mesh(X_mesh,Y_mesh,T_res(:,:,t));  
 %     if input.switch
@@ -44,7 +48,12 @@ for t = 1:length(time)
     pause(1/fps)
 end
 
-
+%% H inf norm over time
+for t = 1:length(time)
+[U,S,V] = svd(abs(T_res(:,:,t)));
+T_maxsvd(t) = max(diag(S));
+end
+plot(time,T_maxsvd)
 %% Initial behaviour
 [X_mesh,Y_mesh] = ndgrid(X,Y);
 time_redux = 0.1; % percentage of shown time instances

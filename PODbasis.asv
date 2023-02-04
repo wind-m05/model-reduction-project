@@ -1,7 +1,5 @@
 function [phiPOD,diagn] = PODbasis(T,Nx,Ny,xstep,ystep,Nt,reduced_energy_remaint)
 %PODBASIS Summary of this function goes here
-
-
 T_stacked = reshape(T,[Nx*Ny,Nt]);
 [U,S,V] = svd(T_stacked,'econ');
 svp = diag(S)/sum(diag(S)); % singular value percentiles
@@ -25,14 +23,22 @@ end
 
 for r = 1:R
 [X, Y] = gradient(phiPOD.xy(:,:,r),xstep,ystep);
-[phiPOD.ddx(:,:,r), ~] = gradient(X,xstep,ystep);
-[~, phiPOD.ddy(:,:,r)] = gradient(Y,xstep,ystep);
+[phiPOD.ddx(:,:,r), phiPOD.dxdy] = gradient(X,xstep,ystep);
+[phiPOD.dydx, phiPOD.ddy(:,:,r)] = gradient(Y,xstep,ystep);
 end
-
+phiPOD.grad = phiPOD.ddx+phiPOD.ddy+phiPOD.dxdy+phiPOD.dydx;
 phiPOD.dotp = zeros(R,R);
+% for i = 1 :R
+%     for j = 1:R
+%     phiPOD.dotp(i,j) = (sum(phiPOD.xy(:,:,i).*phiPOD.ddx(:,:,j),'all')+ ...
+%     sum(phiPOD.xy(:,:,i).*phiPOD.ddy(:,:,j),'all'))*xstep*ystep;
+%     end
+% end
+
+% Redefinition of the gradient trial
 for i = 1 :R
     for j = 1:R
-    phiPOD.dotp(i,j) = (sum(phiPOD.xy(:,:,i).*phiPOD.ddx(:,:,j),'all')+ ...
+    phiPOD.dotp(i,j) = (sum(phiPOD.xy(:,:,i).*phiPOD.grad(:,:,j),'all')+ ...
     sum(phiPOD.xy(:,:,i).*phiPOD.ddy(:,:,j),'all'))*xstep*ystep;
     end
 end

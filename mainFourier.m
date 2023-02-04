@@ -25,8 +25,8 @@ Ny = Ly/(ystep)+1;
 time = 0:tstep:tend;
 X = 0:xstep:Lx;
 Y = 0:ystep:Ly;
-K = 20; 
-L = 20;
+K = 10; 
+L = 10;
 
 % Preallocation
 T = zeros(length(X),length(Y),length(time));
@@ -96,7 +96,7 @@ for t = 1:length(time)
     end
     T(:,:,t) = sumT;
 end
-save('T_snap.mat','T')
+% save('T_snap.mat','T')
 
 
 

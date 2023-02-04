@@ -13,25 +13,37 @@ phiPOD.ddx = zeros(Nx,Ny,R);
 phiPOD.ddy = zeros(Nx,Ny,R);
 phiPOD.xy = U(:,1:R);
 
-G = eye(Nx)*sqrt(1/(xstep*ystep)); % This is G^(-1/2) THIS IS ASSUMED!
-% G = eye(Nx); % This is G^(-1/2) THIS IS ASSUMED!
+
 phiPOD.xy = reshape(phiPOD.xy,[Nx,Ny,R]);
 
+% G = eye(Nx)*1/sqrt((xstep*ystep)); % This is G^(-1/2) THIS IS ASSUMED!
+% for r = 1:R
+% phiPOD.xy(:,:,r) = G * phiPOD.xy(:,:,r);
+% end
+
 for r = 1:R
-phiPOD.xy(:,:,r) = G * phiPOD.xy(:,:,r);
+phiPOD.xy(:,:,r) = (phiPOD.xy(:,:,r)).*sqrt(1/(xstep*ystep));
 end
+
 
 for r = 1:R
 [X, Y] = gradient(phiPOD.xy(:,:,r),xstep,ystep);
-[phiPOD.ddx(:,:,r), ~] = gradient(X,xstep,ystep);
-[~, phiPOD.ddy(:,:,r)] = gradient(Y,xstep,ystep);
+[phiPOD.ddx(:,:,r), phiPOD.dxdy(:,:,r)] = gradient(X,xstep,ystep);
+[phiPOD.dydx(:,:,r), phiPOD.ddy(:,:,r)] = gradient(Y,xstep,ystep);
 end
-
+phiPOD.grad = phiPOD.ddx+phiPOD.ddy+phiPOD.dxdy+phiPOD.dydx;
 phiPOD.dotp = zeros(R,R);
+% for i = 1 :R
+%     for j = 1:R
+%     phiPOD.dotp(i,j) = (sum(phiPOD.xy(:,:,i).*phiPOD.ddx(:,:,j),'all')+ ...
+%     sum(phiPOD.xy(:,:,i).*phiPOD.ddy(:,:,j),'all'))*xstep*ystep;
+%     end
+% end
+
+% Redefinition of the gradient trial
 for i = 1 :R
     for j = 1:R
-    phiPOD.dotp(i,j) = (sum(phiPOD.xy(:,:,i).*phiPOD.ddx(:,:,j),'all')+ ...
-    sum(phiPOD.xy(:,:,i).*phiPOD.ddy(:,:,j),'all'))*xstep*ystep;
+    phiPOD.dotp(i,j) = sum(phiPOD.xy(:,:,i).*phiPOD.grad(:,:,j),'all')*xstep*ystep;
     end
 end
 
