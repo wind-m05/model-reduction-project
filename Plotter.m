@@ -33,6 +33,8 @@ T_res(:,:,t) = T(:,:,t)-T_snap(:,:,t);
 end
 font = 15;
 fps = 60;
+TaxisMin = min(min(T_res(:,:,end)));
+TaxisMax = max(max(T_res(:,:,end)));
 figure()
 for t = 1:length(time)
     mesh(X_mesh,Y_mesh,T_res(:,:,t));  
@@ -41,7 +43,7 @@ for t = 1:length(time)
 %     else
 %         axis([0 Lx 0 Ly TaxisMin TaxisMax]);
 %     end
-    axis([0 Lx 0 Ly -1 +1]) 
+    axis([0 Lx 0 Ly TaxisMin TaxisMax])  
     title(sprintf('Plate temperature for time = %g [s]', round(time(t))),Interpreter='latex',FontSize=font);
     xlabel('x [m]',Interpreter='latex',FontSize=font); 
     ylabel('y [m]',Interpreter='latex',FontSize=font); 

@@ -32,7 +32,7 @@ for r = 1:R
 [phiPOD.dydx(:,:,r), phiPOD.ddy(:,:,r)] = gradient(Y,xstep,ystep);
 end
 
-phiPOD.grad = phiPOD.ddx+phiPOD.ddy+phiPOD.dxdy+phiPOD.dydx;
+phiPOD.grad = phiPOD.ddx+phiPOD.ddy; %+phiPOD.dxdy+phiPOD.dydx;
 phiPOD.dotp = zeros(R,R);
 
 % for i = 1 :R

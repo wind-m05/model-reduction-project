@@ -117,24 +117,19 @@ sys = ss(A_,B,C,0);
 source = zeros(length(time),K+1,L+1);
 for k = 0:K
     for l = 0:L
-        B_1(k+1,l+1) = sum(input.u1.*phi_kl(:,:,k+1,l+1),'all')*xstep*ystep;
-        B_2(k+1,l+1) = sum(input.u2.*phi_kl(:,:,k+1,l+1),'all')*xstep*ystep;
+        B(k+1,l+1) = sum(input.u1.*phi_kl(:,:,k+1,l+1)+input.u2.*phi_kl(:,:,k+1,l+1),'all')*xstep*ystep;
         for t = 1:length(time)
         [u1, u2] = heatInput(t,input.par); 
         source(t,k+1,l+1) = sum(u1*input.u1.*phi_kl(:,:,k+1,l+1)+u2*input.u2.*phi_kl(:,:,k+1,l+1),'all')*xstep*ystep;
         end
     end
 end
-B_1 = reshape(B_1,(K+1)*(L+1),1);
-B_2 = reshape(B_2,(K+1)*(L+1),1);
-B = (1/rho(1)*c(1)).*[B_1 B_2];
 
-u1 = input.par.amp1*cos(2*pi*input.par.freq*time);
-u2 = input.par.amp2*sin(2*pi*input.par.freq*time);
-source = [u1' u2'];
+B = reshape(B,(K+1)*(L+1),1);
+source = reshape(source,length(time),(K+1)*(L+1));
 C = eye(1,(K+1)*(L+1))*0;
 sys = ss(A_,B,C,0);
-[y,~,x] = lsim(sys,source,time,a0);
+[y,~,x] = lsim(sys,source(:,1),time,a0);
 
 x = reshape(x,length(time),K+1,L+1);
 
