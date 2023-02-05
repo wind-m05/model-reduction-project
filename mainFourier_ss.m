@@ -25,8 +25,8 @@ Ny = Ly/(ystep)+1;
 time = 0:tstep:tend;
 X = 0:xstep:Lx;
 Y = 0:ystep:Ly;
-K = 50; 
-L = 50;
+K = 10; 
+L = 10;
 
 % Preallocation
 T = zeros(length(X),length(Y),length(time));
@@ -34,7 +34,7 @@ a0 = zeros(K+1,L+1);
 a = zeros(K+1,L+1,Nt);
 
 % User parameters
-input.switch = false; % Turn the input source on or off
+input.switch = true; % Turn the input source on or off
 input.par.type = 'sine'; % {const,sine} What type of input
 input.par.freq = 0.01; % [Hz]
 input.par.tstart = 5; % [s]
@@ -46,7 +46,7 @@ input.par.amp2 = 0.4;
 % Initial temperature
 kinit=2; % Frequency of basis in x
 linit=2; % Frequency of basis in y
-[T0,T0dx,T0dy] = initialTemp(X,Y,kinit,linit,'blockup',true);
+[T0,T0dx,T0dy] = initialTemp(X,Y,kinit,linit,'gauss',true);
 
 %% Calculate phi_kl for x,y positions overlapping with u
 

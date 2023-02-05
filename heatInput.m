@@ -6,8 +6,8 @@ for t = 1 : length(time)
         u2(t) = par.amp2;
         
         elseif strcmp(par.type, 'sine')
-        u1(t) = par.amp1*cos(2*pi*par.freq*t);
-        u2(t) = par.amp2*sin(2*pi*par.freq*t);
+        u1(t) = par.amp1*abs(cos(2*pi*par.freq*t));
+        u2(t) = par.amp2*abs(sin(2*pi*par.freq*t));
         end
     else
         u1(t) = 0;

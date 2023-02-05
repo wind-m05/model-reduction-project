@@ -37,7 +37,7 @@ a0 = zeros(diagn.R,1);
 a = zeros(diagn.R,Nt);
 
 % User parameters
-input.switch = true; % Turn the input source on or off
+input.switch = false; % Turn the input source on or off
 input.par.type = 'sine'; % {const,sine} What type of input
 input.par.freq = 0.01; % [Hz]
 input.par.tstart = 5; % [s]
@@ -49,7 +49,7 @@ input.par.amp2 = 0.4;
 % Initial temperature
 kinit=2; % Frequency of basis in x
 linit=2; % Frequency of basis in y
-[T0,T0dx,T0dy] = initialTemp(X,Y,kinit,linit,'blockup',true);
+[T0,T0dx,T0dy] = initialTemp(X,Y,kinit,linit,'gauss',true);
 %% Calculate phiPOD for x,y positions overlapping with u
 
 % Actuator positions
