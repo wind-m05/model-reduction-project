@@ -105,7 +105,7 @@ for k = 0:K
     e(k+1,l+1) = sum(Vq'.*phi_kl_interp(:,:,k+1,l+1),'all')*xstep*ystep/100; 
     end
 end
-
+einv = pinv(e);
 % Make phi_kl 4D matrix
 phi_kl = zeros(length(X),length(Y),K+1,L+1);
 for x = 1:length(X)
@@ -155,9 +155,10 @@ end
 A = zeros(K,L);
 for k = 0:K
     for l = 0:L
-    A(k+1,l+1) = -kappa(1)/e(k+1,l+1)*((k^2*pi/Lx^2)+(l^2*pi^2/Ly^2));
+    A(k+1,l+1) = -kappa(1)*((k^2*pi/Lx^2)+(l^2*pi^2/Ly^2));
     end
 end
+A = einv*A;
 A = reshape(A,(K+1)*(L+1),1);
 a0 = reshape(a0,(K+1)*(L+1),1);
 A_ = diag(A);
@@ -176,6 +177,8 @@ for k = 0:K
         B_2(k+1,l+1) = sum(input.u2.*phi_kl(:,:,k+1,l+1),'all')*xstep*ystep;
     end
 end
+B_1 = einv*B_1; 
+B_2 = einv*B_2;
 B_1 = reshape(B_1,(K+1)*(L+1),1);
 B_2 = reshape(B_2,(K+1)*(L+1),1);
 B = [B_1 B_2];
