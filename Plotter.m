@@ -2,10 +2,10 @@
 % T_snap = load('T_snap_backup.mat').T;
 %% Plot critical point
 figure()
-surf(T(:,:,30))
+surf(T(:,:,35))
 title('POD')
 figure()
-surf(T_snap(:,:,30))
+surf(T_snap(:,:,35))
 title('Fourier')
 %% full simulation
 [X_mesh,Y_mesh] = ndgrid(X,Y);

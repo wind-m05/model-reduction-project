@@ -31,11 +31,9 @@ L = 10;
 % Preallocation
 T = zeros(length(X),length(Y),length(time));
 a0 = zeros(K+1,L+1);
-a = zeros(K+1,L+1,length(time));
-
+a = zeros(K+1,L+1,Nt);
 
 % User parameters
-show_visuals = false; % Will show all the visualization plots subsequently
 input.switch = false; % Turn the input source on or off
 input.par.type = 'sine'; % {const,sine} What type of input
 input.par.freq = 0.01; % [Hz]
@@ -65,7 +63,7 @@ input.u2 = zeros(length(X),length(Y));
 input.u1(indx1,indy) = 1;
 input.u2(indx2,indy) = 1;
 
-% Make phi_kl 4D matrix
+%% Define basis
 phi_kl = zeros(length(X),length(Y),K+1,L+1);
 for x = 1:length(X)
     for y = 1:length(Y)
@@ -93,16 +91,6 @@ end
 %     end
 % end
 
-A = zeros(K,L);
-for k = 0:K
-    for l = 0:L
-    A(k+1,l+1) = -kappa(1)/(rho(1)*c(1))*((k^2*pi/Lx^2)+(l^2*pi^2/Ly^2));
-    end
-end
-A = reshape(A,(K+1)*(L+1),1);
-a0 = reshape(a0,(K+1)*(L+1),1);
-A_ = diag(A);
-
 %% Without input
 % B = eye((K+1)*(L+1),1)*0;
 % C = eye(1,(K+1)*(L+1))*0;
@@ -110,6 +98,17 @@ A_ = diag(A);
 % [y,~,x] = initial(sys,a0,time);
 % x = reshape(x,length(time),K+1,L+1);
 %% With input
+A = zeros(K,L);
+for k = 0:K
+    for l = 0:L
+    A(k+1,l+1) = ((k^2*pi^2/Lx^2)+(l^2*pi^2/Ly^2));
+    end
+end
+A = -kappa(1)/(rho(1)*c(1)).*A;
+A = reshape(A,(K+1)*(L+1),1);
+a0 = reshape(a0,(K+1)*(L+1),1);
+A_ = diag(A);
+
 source = zeros(length(time),2);
 for k = 0:K
     for l = 0:L
@@ -128,7 +127,7 @@ end
 
 C = eye(1,(K+1)*(L+1))*0;
 sys = ss(A_,B,C,0);
-[y,~,x] = lsim(sys,source,time,a0,'zoh');
+[y,~,x] = lsim(sys,source,time,a0);
 x = reshape(x,length(time),K+1,L+1);
 
 %% Temperature over time
@@ -142,3 +141,14 @@ for t = 1:length(time)
     T(:,:,t) = sumT;
 end
 save('T_snap.mat','T')
+
+%% Test initial condition
+sumA = 0;
+a0 = reshape(a0,K+1,L+1);
+for k = 1:K
+    for l = 1:L
+    sumA = sumA + a0(k,l).*phi_kl(:,:,k,l); 
+    end
+end
+figure()
+surf(sumA)
