@@ -25,8 +25,8 @@ Ny = Ly/(ystep)+1;
 time = 0:tstep:tend;
 X = 0:xstep:Lx;
 Y = 0:ystep:Ly;
-K = 10; 
-L = 10;
+K = 50; 
+L = 50;
 
 % Preallocation
 T = zeros(length(X),length(Y),length(time));
@@ -46,7 +46,7 @@ input.par.amp2 = 0.4;
 % Initial temperature
 kinit=2; % Frequency of basis in x
 linit=2; % Frequency of basis in y
-[T0,T0dx,T0dy] = initialTemp(X,Y,kinit,linit,'gauss',true);
+[T0,T0dx,T0dy] = initialTemp(X,Y,kinit,linit,'blockup',true);
 
 %% Calculate phi_kl for x,y positions overlapping with u
 

@@ -28,7 +28,7 @@ Y = 0:ystep:Ly;
 
 %% Define basis
 T_snap = load('T_snap.mat').T; % Load data for POD basis
-reduced_energy_remaint = 0.999; % Ratio of information included into the reduced order model
+reduced_energy_remaint = 0.99; % Ratio of information included into the reduced order model
 [phiPOD,diagn] = PODbasis(T_snap,Nx,Ny,xstep,ystep,Nt,reduced_energy_remaint);
 
 % Preallocation
@@ -37,7 +37,7 @@ a0 = zeros(diagn.R,1);
 a = zeros(diagn.R,Nt);
 
 % User parameters
-input.switch = false; % Turn the input source on or off
+input.switch = true; % Turn the input source on or off
 input.par.type = 'sine'; % {const,sine} What type of input
 input.par.freq = 0.01; % [Hz]
 input.par.tstart = 5; % [s]
@@ -49,7 +49,7 @@ input.par.amp2 = 0.4;
 % Initial temperature
 kinit=2; % Frequency of basis in x
 linit=2; % Frequency of basis in y
-[T0,T0dx,T0dy] = initialTemp(X,Y,kinit,linit,'gauss',true);
+[T0,T0dx,T0dy] = initialTemp(X,Y,kinit,linit,'blockup',true);
 %% Calculate phiPOD for x,y positions overlapping with u
 
 % Actuator positions
