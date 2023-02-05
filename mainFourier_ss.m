@@ -1,4 +1,5 @@
-%% Project model reduction
+%% Main Fourier
+% Authors: Michiel Wind and Jelle Cruijsen - TU/e 2023
 clear all; close all; clc
 
 % Properties
@@ -14,7 +15,7 @@ Tamb = 309; % Ambient temp Kelvin
 TK2C = 273; % Kelvin to Celcius offset
 
 % Simulation parameters
-tend = 600; % 10 minutes
+tend = 600; % User input 
 Nt = tend*2;
 tstep = tend/(Nt-1);
 wstep = 10; % How many discrete steps does the actuator contain 
@@ -25,8 +26,8 @@ Ny = Ly/(ystep)+1;
 time = 0:tstep:tend;
 X = 0:xstep:Lx;
 Y = 0:ystep:Ly;
-K = 10; 
-L = 10;
+K = 10; % User input
+L = 10; % User input
 
 % Preallocation
 T = zeros(length(X),length(Y),length(time));
@@ -34,19 +35,19 @@ a0 = zeros(K+1,L+1);
 a = zeros(K+1,L+1,Nt);
 
 % User parameters
-input.switch = true; % Turn the input source on or off
-input.par.type = 'sine'; % {const,sine} What type of input
-input.par.freq = 0.01; % [Hz]
-input.par.tstart = 5; % [s]
-input.par.tend = tend; % [s]
-input.par.amp1 = 0.4; % [-]
-input.par.amp2 = 0.4;
-
+input.switch = false; % User input - Turn the input source (on/off)-(true/false)
+input.par.type = 'sine'; % User input {const,sine} constant/sinusoidal input
+input.par.freq = 0.01; % [Hz] % User input 
+input.par.tstart = 0; % [s] % User input 
+input.par.tend = tend; % [s] % User input 
+input.par.amp1 = 0.4; % [-] % User input 
+input.par.amp2 = 0.4; % User input 
 
 % Initial temperature
 kinit=2; % Frequency of basis in x
 linit=2; % Frequency of basis in y
-[T0,T0dx,T0dy] = initialTemp(X,Y,kinit,linit,'gauss',true);
+[T0,T0dx,T0dy] = initialTemp(X,Y,kinit,linit,'blockup',true); % User input choose ...
+% ({gauss,blockup,blockdown,fourier},normalization = true/false)
 
 %% Calculate phi_kl for x,y positions overlapping with u
 
@@ -75,7 +76,6 @@ for x = 1:length(X)
     end
 end
 
-
 %% Initial conditions and ODE solver for a
 for k = 0:K 
     for l = 0:L
@@ -83,20 +83,6 @@ for k = 0:K
     end
 end
 
-% for k = 1:K
-%     for l = 1:L
-%     [phi_kl_dx, phi_kl_dy] = gradient(phi_kl(:,:,k,l),xstep,ystep);
-%     [phi_kl_ddx(:,:,k,l), phi_kl_dxdy(:,:,k,l)] = gradient(phi_kl_dx,xstep,ystep);
-%     [phi_kl_dydx(:,:,k,l), phi_kl_ddy(:,:,k,l)] = gradient(phi_kl_dy,xstep,ystep);
-%     end
-% end
-
-%% Without input
-% B = eye((K+1)*(L+1),1)*0;
-% C = eye(1,(K+1)*(L+1))*0;
-% sys = ss(A_,B,C,0);
-% [y,~,x] = initial(sys,a0,time);
-% x = reshape(x,length(time),K+1,L+1);
 %% With input
 A = zeros(K,L);
 for k = 0:K
@@ -141,14 +127,3 @@ for t = 1:length(time)
     T(:,:,t) = sumT;
 end
 save('T_snap.mat','T')
-
-%% Test initial condition
-sumA = 0;
-a0 = reshape(a0,K+1,L+1);
-for k = 1:K
-    for l = 1:L
-    sumA = sumA + a0(k,l).*phi_kl(:,:,k,l); 
-    end
-end
-figure()
-surf(sumA)

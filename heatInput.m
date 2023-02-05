@@ -1,6 +1,6 @@
 function [u1,u2] = heatInput(time,par)
 for t = 1 : length(time)
-    if(t>=par.tstart && t<=par.tend)
+    if(time(t)>=par.tstart && time(t)<=par.tend)
         if strcmp(par.type, 'const')
         u1(t) = par.amp1;
         u2(t) = par.amp2;

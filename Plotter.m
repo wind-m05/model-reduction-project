@@ -1,12 +1,4 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Visualizations %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% T_snap = load('T_snap_backup.mat').T;
-%% Plot critical point
-figure()
-surf(T(:,:,35))
-title('POD')
-figure()
-surf(T_snap(:,:,35))
-title('Fourier')
 %% full simulation
 [X_mesh,Y_mesh] = ndgrid(X,Y);
 TaxisMin = min(min(T0));
@@ -245,7 +237,10 @@ ylabel('time [h]')
 
 %% Show singular values of POD basis
 figure()
-plot(diagn.svp,'ko','Linewidth',2)
+semilogx(diagn.svp,'ko','Linewidth',2)
+grid on
+xlabel('Time [s]')
+ylabel('Information densitity')
 figure()
 plot(real(diagn.U(:,1:3)))
 title('The first 3 dominant modes')
@@ -259,3 +254,14 @@ figure()
 surf(phiPOD.ddy(:,:,1))
 figure()
 % test = sum(phiPOD(:,:,1)'*phiPOD(:,:,2),'all')*xstep*ystep
+
+%% Test initial condition
+sumA = 0;
+a0 = reshape(a0,K+1,L+1);
+for k = 1:K
+    for l = 1:L
+    sumA = sumA + a0(k,l).*phi_kl(:,:,k,l); 
+    end
+end
+figure()
+surf(sumA)
